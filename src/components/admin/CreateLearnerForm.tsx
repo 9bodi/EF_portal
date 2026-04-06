@@ -1,13 +1,14 @@
 ﻿"use client";
 import { useState } from "react";
 
-export default function CreateLearnerForm({ onCreated }: { onCreated?: () => void }) {
+export default function CreateLearnerForm() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState("");
   const [form, setForm] = useState({
-    email: "", firstName: "", lastName: "", phone: "", fundingType: "", cohortName: "",
+    email: "", firstName: "", lastName: "", phone: "",
+    fundingType: "", commune: "", postalCode: "", groupName: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,7 +25,7 @@ export default function CreateLearnerForm({ onCreated }: { onCreated?: () => voi
     setLoading(false);
     if (data.success) {
       setResult(data.learner);
-      setForm({ email: "", firstName: "", lastName: "", phone: "", fundingType: "", cohortName: "" });
+      setForm({ email: "", firstName: "", lastName: "", phone: "", fundingType: "", commune: "", postalCode: "", groupName: "" });
     } else {
       setError(data.error || "Erreur inconnue");
     }
@@ -32,9 +33,11 @@ export default function CreateLearnerForm({ onCreated }: { onCreated?: () => voi
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="px-4 py-2 bg-[#0f1f3d] text-white rounded-lg text-sm font-semibold hover:bg-[#1a3a6b] transition">
-        + Inscrire un apprenant
-      </button>
+      <div className="mb-6">
+        <button onClick={() => setOpen(true)} className="px-4 py-2 bg-[#0f1f3d] text-white rounded-lg text-sm font-semibold hover:bg-[#1a3a6b] transition">
+          + Inscrire un apprenant
+        </button>
+      </div>
     );
   }
 
@@ -61,14 +64,14 @@ export default function CreateLearnerForm({ onCreated }: { onCreated?: () => voi
         <input type="text" placeholder="Nom *" value={form.lastName} onChange={(e) => setForm({...form, lastName: e.target.value})} required className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
         <input type="email" placeholder="Email *" value={form.email} onChange={(e) => setForm({...form, email: e.target.value})} required className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
         <input type="tel" placeholder="Telephone" value={form.phone} onChange={(e) => setForm({...form, phone: e.target.value})} className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
-        <select value={form.fundingType} onChange={(e) => setForm({...form, fundingType: e.target.value})} className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]">
-          <option value="">Type de financement</option>
-          <option value="DIF">DIF elu</option>
-          <option value="collectivite">Collectivite</option>
-          <option value="personnel">Personnel</option>
-          <option value="autre">Autre</option>
+        <input type="text" placeholder="Commune *" value={form.commune} onChange={(e) => setForm({...form, commune: e.target.value})} required className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
+        <input type="text" placeholder="Code postal *" value={form.postalCode} onChange={(e) => setForm({...form, postalCode: e.target.value})} required className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
+        <select value={form.fundingType} onChange={(e) => setForm({...form, fundingType: e.target.value})} required className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]">
+          <option value="">Financement *</option>
+          <option value="dif">DIF elu</option>
+          <option value="cohort">Cohorte / Collectivite</option>
         </select>
-        <input type="text" placeholder="Nom de cohorte" value={form.cohortName} onChange={(e) => setForm({...form, cohortName: e.target.value})} className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
+        <input type="text" placeholder="Nom du groupe" value={form.groupName} onChange={(e) => setForm({...form, groupName: e.target.value})} className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
         <div className="md:col-span-2">
           <button type="submit" disabled={loading} className="px-6 py-2 bg-[#0f1f3d] text-white rounded-lg text-sm font-semibold hover:bg-[#1a3a6b] transition disabled:opacity-50">
             {loading ? "Creation..." : "Creer le compte"}

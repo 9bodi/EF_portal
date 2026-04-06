@@ -1,26 +1,37 @@
 ﻿import { createClient } from "@/lib/supabase/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import CreateLearnerForm from "@/components/admin/CreateLearnerForm";
+
+function getAdminClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
+}
 
 export default async function AdminPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase.from("users").select("*").eq("id", user.id).single();
+  const admin = getAdminClient();
+
+  const { data: profile } = await admin.from("users").select("*").eq("id", user.id).single();
   if (!profile || profile.role !== "admin") redirect("/formation");
 
-  const { data: learners } = await supabase
+  const { data: learners } = await admin
     .from("users")
     .select("*")
     .neq("role", "admin")
     .order("last_name");
 
-  const { data: allProgress } = await supabase
+  const { data: allProgress } = await admin
     .from("scorm_progress")
     .select("*");
 
-  const { data: chapters } = await supabase
+  const { data: chapters } = await admin
     .from("chapters")
     .select("id, title")
     .order("order");
@@ -110,7 +121,7 @@ export default async function AdminPage() {
           {totalLearners === 0 ? (
             <div className="px-6 py-12 text-center text-gray-400">
               <p className="text-lg">Aucun apprenant inscrit</p>
-              <p className="text-sm mt-2">Cliquez sur le bouton ci-dessus pour inscrire un apprenant</p>
+              <p className="text-sm mt-2">Utilisez le formulaire ci-dessus pour inscrire un apprenant</p>
             </div>
           ) : (
             <table className="w-full">
@@ -118,6 +129,7 @@ export default async function AdminPage() {
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nom</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Commune</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Financement</th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Progression</th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Temps</th>
@@ -134,7 +146,8 @@ export default async function AdminPage() {
                       </a>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">{l.email}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500">{l.funding_type || "-"}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{l.commune ? l.commune + (l.postal_code ? " (" + l.postal_code + ")" : "") : "-"}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{l.funding_type === "dif" ? "DIF" : l.funding_type === "cohort" ? "Cohorte" : "-"}</td>
                     <td className="px-6 py-4 text-center">
                       <div className="flex items-center justify-center gap-2">
                         <div className="w-20 bg-gray-200 rounded-full h-2">

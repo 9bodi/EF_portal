@@ -19,10 +19,14 @@ export async function POST(request: NextRequest) {
   if (!profile || profile.role !== "admin") return NextResponse.json({ error: "Acces refuse" }, { status: 403 });
 
   const body = await request.json();
-  const { email, firstName, lastName, phone, fundingType, cohortName } = body;
+  const { email, firstName, lastName, phone, fundingType, commune, postalCode, groupName } = body;
 
-  if (!email || !firstName || !lastName) {
-    return NextResponse.json({ error: "Email, prenom et nom requis" }, { status: 400 });
+  if (!email || !firstName || !lastName || !commune || !postalCode || !fundingType) {
+    return NextResponse.json({ error: "Email, prenom, nom, commune, code postal et financement requis" }, { status: 400 });
+  }
+
+  if (fundingType !== "dif" && fundingType !== "cohort") {
+    return NextResponse.json({ error: "Type de financement invalide" }, { status: 400 });
   }
 
   const admin = getAdminClient();
@@ -39,32 +43,31 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: authError.message }, { status: 500 });
   }
 
-  const { error: profileError } = await admin.from("users").insert({
+  const insertData: Record<string, unknown> = {
     id: authUser.user.id,
     email,
     first_name: firstName,
     last_name: lastName,
-    phone: phone || null,
+    commune,
+    postal_code: postalCode,
+    funding_type: fundingType,
     role: "learner",
-    funding_type: fundingType || null,
-    cohort_name: cohortName || null,
     must_change_password: true,
     created_at: new Date().toISOString(),
-  });
+  };
+  if (phone) insertData.phone = phone;
+  if (groupName) insertData.group_name = groupName;
+
+  const { error: profileError } = await admin.from("users").insert(insertData);
 
   if (profileError) {
     console.error("[ADMIN] Erreur creation profil:", profileError);
+    await admin.auth.admin.deleteUser(authUser.user.id);
     return NextResponse.json({ error: profileError.message }, { status: 500 });
   }
 
   return NextResponse.json({
     success: true,
-    learner: {
-      id: authUser.user.id,
-      email,
-      firstName,
-      lastName,
-      tempPassword,
-    },
+    learner: { id: authUser.user.id, email, firstName, lastName, tempPassword },
   });
 }
