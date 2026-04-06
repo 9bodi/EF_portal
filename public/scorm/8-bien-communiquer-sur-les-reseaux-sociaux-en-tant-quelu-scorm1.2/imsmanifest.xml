@@ -1,0 +1,110 @@
+<?xml version="1.0" ?>
+<manifest identifier="NQaPsWAcfbl1NSE2eNBWZHMDhyn_wELIroH87NOW" version="1"
+  xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2"
+  xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsproject.org/xsd/imscp_rootv1p1p2 imscp_rootv1p1p2.xsd
+                      http://www.adlnet.org/xsd/adlcp_rootv1p2 adlcp_rootv1p2.xsd">
+  <metadata>
+    <schema>ADL SCORM</schema>
+    <schemaversion>1.2</schemaversion>
+    <adlcp:location>metadata.xml</adlcp:location> 
+  </metadata>
+  <organizations default="articulate_rise">
+      <organization identifier="articulate_rise">
+      <title>8. Bien communiquer sur les réseaux sociaux en tant qu&#39;élu</title>
+      <item identifier="i1" identifierref="r1" isvisible="true">
+        <title>8. Bien communiquer sur les réseaux sociaux en tant qu&#39;élu</title>
+        <adlcp:datafromlms>eyJjcHYiOiJyb0g4N05PVyIsInJsZCI6ZmFsc2V9</adlcp:datafromlms>
+      </item>
+    </organization>
+  </organizations>
+  <resources>
+    <resource identifier="r1" type="webcontent" adlcp:scormtype="sco" href="scormdriver/indexAPI.html">
+      <!-- SCORMDRIVER STUFF -->
+      <file href="scormdriver/indexAPI.html" />
+      <file href="scormdriver/preloadIntegrity.js" />
+      <file href="scormdriver/driverOptions.js" />
+      <file href="scormdriver/AICCComm.html" />
+      <file href="scormdriver/auto-scripts/AutoBookmark.js" />
+      <file href="scormdriver/auto-scripts/AutoCompleteSCO.js" />
+      <file href="scormdriver/auto-scripts/CourseExit.js" />
+      <file href="scormdriver/blank.html" />
+      <file href="scormdriver/goodbye.html" />
+      <file href="scormdriver/scormdriver.js" />
+      <file href="scormdriver/browsersniff.js" />
+
+      <!-- RUNTIME COMMON STUFF -->
+      <file href="scormcontent/index.html" />
+
+      
+        <file href="scormcontent/lib/fonts/icomoon.ttf"/>
+        <file href="scormcontent/lib/fonts/icomoon.woff"/>
+
+        <file href="scormcontent/lib/icomoon.css"/>
+        <file href="scormcontent/lib/player-0.0.11.min.js"/>
+        <file href="scormcontent/lib/lzwcompress.js"/>
+      
+
+      <!-- FRONTEND BUNDLE ASSETS -->
+      <file href="scormcontent/lib/rise/8944ad2f.js" />
+<file href="scormcontent/lib/rise/56803e6d.css" />
+<file href="scormcontent/lib/rise/6bef5cc0.js" />
+<file href="scormcontent/lib/rise/09f54479.css" />
+<file href="scormcontent/lib/rise/b08a8745.js" />
+<file href="scormcontent/lib/rise/b0c74692.js" />
+<file href="scormcontent/lib/rise/8c0b49f4.js" />
+<file href="scormcontent/lib/rise/d0fbbd1b.js" />
+<file href="scormcontent/lib/rise/db85f2af.js" />
+<file href="scormcontent/lib/rise/cddf90b2.js" />
+<file href="scormcontent/lib/rise/cc545515.js" />
+<file href="scormcontent/lib/rise/df30b989.js" />
+<file href="scormcontent/lib/rise/30563ed1.js" />
+<file href="scormcontent/lib/rise/466ab4a9.js" />
+<file href="scormcontent/lib/rise/0bcec83e.js" />
+<file href="scormcontent/lib/rise/7e615df9.js" />
+<file href="scormcontent/lib/rise/3d69be23.js" />
+<file href="scormcontent/lib/rise/7c2963ab.js" />
+<file href="scormcontent/lib/learn_dist/entry.js" />
+<file href="scormcontent/lib/learn_dist/5515a099.js" />
+<file href="scormcontent/lib/learn_dist/e06aa5e6.css" />
+<file href="scormcontent/lib/learn_dist/7acdcaff.js" />
+<file href="scormcontent/lib/mondrian/entry.js" />
+<file href="scormcontent/lib/mondrian/ad3a3b3a.js" />
+<file href="scormcontent/lib/mondrian/1cc03b52.js" />
+<file href="scormcontent/lib/mondrian/7f774308.js" />
+<file href="scormcontent/lib/mondrian/09e37aee.js" />
+<file href="scormcontent/lib/mondrian/196251cf.js" />
+<file href="scormcontent/lib/sandbox/sandbox.html" />
+<file href="scormcontent/lib/sandbox/c77685df.js" />
+<file href="scormcontent/lib/sandbox/4adfab46.css" />
+
+
+      <!-- RUNTIME CONTENT STUFF -->
+      <file href="scormcontent/lib/fonts/IvW-VPx-gO94x_5w-MyriadPro-SemiboldIt.woff" />
+<file href="scormcontent/lib/fonts/Q_eYkaY6BMwWbMdS-MyriadPro-Bold.woff" />
+<file href="scormcontent/lib/fonts/1vOgLo0wWeTDpy-q-MyriadPro-Regular.woff" />
+<file href="scormcontent/lib/fonts/PF-oybnLduxr85Z6-MyriadPro-SemiboldIt.woff" />
+<file href="scormcontent/lib/fonts/khCe534_YyqXXrFd-MyriadPro-Bold.woff" />
+<file href="scormcontent/lib/fonts/soqSv6YHWYVNHUxR-MyriadPro-Regular.woff" />
+<file href="scormcontent/lib/fonts/Inter-Medium.woff" />
+<file href="scormcontent/lib/fonts/Inter-Black.woff" />
+<file href="scormcontent/lib/fonts/Inter-Bold.woff" />
+<file href="scormcontent/lib/fonts/Inter-Regular.woff" />
+<file href="scormcontent/lib/fonts/Inter-Light.woff" />
+<file href="scormcontent/assets/Bf6nr0QvohxHmyC2.jpg" />
+<file href="scormcontent/assets/AdobeStock_336556975.jpg" />
+<file href="scormcontent/assets/AdobeStock_1339710634.jpg" />
+<file href="scormcontent/assets/AdobeStock_704066159.jpg" />
+<file href="scormcontent/assets/AdobeStock_439350812.jpg" />
+<file href="scormcontent/assets/V2_Module%208%20-%20Bien%20communiquer%20sur%20les%20r%C3%A9seaux%20sociaux%20en%20tant%20qu%E2%80%99%C3%A9lu.mp4" />
+<file href="scormcontent/assets/V2_Module%208%20-%20Bien%20communiquer%20sur%20les%20r%C3%A9seaux%20sociaux%20en%20tant%20qu%E2%80%99%C3%A9lu.jpg" />
+<file href="scormcontent/assets/Elu%20Formation.png" />
+<file href="scormcontent/assets/Elu%20Formation%20%284%29.png" />
+<file href="scormcontent/assets/Elu%20Formation%20%285%29.png" />
+<file href="scormcontent/assets/AdobeStock_601259737.jpg" />
+<file href="scormcontent/assets/logo.png" />
+
+    </resource>
+  </resources>
+</manifest>
