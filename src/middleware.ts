@@ -17,10 +17,34 @@ export async function middleware(request: NextRequest) {
       },
     }
   );
-  await supabase.auth.getUser();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  const path = request.nextUrl.pathname;
+
+  const publicPaths = ["/login", "/forgot-password", "/reset-password", "/api/auth"];
+  const isPublic = publicPaths.some((p) => path.startsWith(p));
+
+  if (!user && !isPublic && path !== "/") {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  if (path.startsWith("/admin")) {
+    if (!user) return NextResponse.redirect(new URL("/login", request.url));
+
+    const { data: profile } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile || profile.role !== "admin") {
+      return NextResponse.redirect(new URL("/formation", request.url));
+    }
+  }
+
   return supabaseResponse;
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mp4|woff|woff2|ttf|css|js|json|xml|xsd|html)$).*)"],
 };

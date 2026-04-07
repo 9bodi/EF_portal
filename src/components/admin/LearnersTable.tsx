@@ -1,5 +1,5 @@
 ﻿"use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -31,6 +31,22 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
     dateTo: "",
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [logoWhite, setLogoWhite] = useState<string | null>(null);
+
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        setLogoWhite(canvas.toDataURL("image/png"));
+      }
+    };
+    img.src = "/img/LOGO_ELU-FORMATION_BLANC100.png";
+  }, []);
 
   const filtered = learners.filter((l) => {
     const search = filters.search.toLowerCase();
@@ -51,19 +67,28 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
 
   const exportPDF = () => {
     const doc = new jsPDF({ orientation: "landscape" });
+    const pageW = doc.internal.pageSize.getWidth();
 
     doc.setFillColor(15, 31, 61);
-    doc.rect(0, 0, doc.internal.pageSize.getWidth(), 32, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.text("Elu Formation", 14, 15);
-    doc.setFontSize(10);
+    doc.rect(0, 0, pageW, 32, "F");
+
+    if (logoWhite) {
+      doc.addImage(logoWhite, "PNG", 14, 5, 92, 20);
+    } else {
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(18);
+      doc.setFont("helvetica", "bold");
+      doc.text("ELU FORMATION", 14, 20);
+    }
+
+    doc.setTextColor(200, 210, 230);
+    doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    doc.text("Rapport de suivi des apprenants", 14, 23);
+    doc.text("Rapport de suivi des apprenants", 110, 14);
+
     const now = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
-    doc.text("Genere le " + now, doc.internal.pageSize.getWidth() - 14, 15, { align: "right" });
-    doc.text(filtered.length + " apprenant(s)", doc.internal.pageSize.getWidth() - 14, 23, { align: "right" });
+    doc.text("Genere le " + now, pageW - 14, 14, { align: "right" });
+    doc.text(filtered.length + " apprenant(s)", pageW - 14, 22, { align: "right" });
 
     const activeFilters: string[] = [];
     if (filters.search) activeFilters.push("Recherche : " + filters.search);
@@ -98,7 +123,7 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
       startY,
       head: [["Nom", "Email", "CP", "Financement", "Groupe", "Inscription", "Progression", "Temps", "Score", "Dernier acces"]],
       body: tableData,
-      styles: { fontSize: 7, cellPadding: 3 },
+      styles: { fontSize: 7, cellPadding: 3, lineColor: [220, 220, 220], lineWidth: 0.2 },
       headStyles: { fillColor: [15, 31, 61], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 7 },
       alternateRowStyles: { fillColor: [245, 247, 250] },
       columnStyles: {
@@ -110,16 +135,18 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
         8: { halign: "center" },
         9: { halign: "center" },
       },
+      margin: { left: 14, right: 14 },
       didDrawPage: (data: any) => {
-        const pageCount = doc.getNumberOfPages();
+        const pageH = doc.internal.pageSize.getHeight();
         doc.setFontSize(7);
         doc.setTextColor(150, 150, 150);
         doc.text(
-          "Elu Formation - Page " + data.pageNumber + "/" + pageCount,
-          doc.internal.pageSize.getWidth() / 2,
-          doc.internal.pageSize.getHeight() - 8,
+          "Elu Formation - Rapport confidentiel - Page " + data.pageNumber,
+          pageW / 2,
+          pageH - 8,
           { align: "center" }
         );
+        doc.text("contact@eluformation.fr", pageW - 14, pageH - 8, { align: "right" });
       },
     });
 
