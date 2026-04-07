@@ -1,6 +1,7 @@
 ﻿import { createClient } from "@/lib/supabase/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
+import Image from "next/image";
 import CreateLearnerForm from "@/components/admin/CreateLearnerForm";
 import ImportLearnersForm from "@/components/admin/ImportLearnersForm";
 import LearnersTable from "@/components/admin/LearnersTable";
@@ -75,15 +76,73 @@ export default async function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-[#0f1f3d] text-white px-6 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold">Elu Formation — Admin</h1>
-          <p className="text-sm text-gray-300">{profile.first_name} {profile.last_name}</p>
+
+      {/* Header */}
+      <header
+        style={{
+          background: "#0f1f3d",
+          padding: "14px 24px",
+          display: "grid",
+          gridTemplateColumns: "1fr auto 1fr",
+          alignItems: "center",
+        }}
+      >
+        {/* Logo gauche */}
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <Image
+            src="/img/LOGO_ELU-FORMATION_BLANC100.png"
+            alt="Élu Formation"
+            width={160}
+            height={52}
+            style={{ objectFit: "contain" }}
+            priority
+          />
         </div>
-        <div className="flex gap-4 items-center">
-          <a href="/formation" className="text-sm text-gray-300 hover:text-white transition">Voir comme apprenant</a>
+
+        {/* ADMIN + prénom centré */}
+        <div style={{ textAlign: "center" }}>
+          <span
+            style={{
+              display: "inline-block",
+              background: "rgba(255,255,255,0.12)",
+              color: "#fff",
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: "0.1em",
+              padding: "3px 10px",
+              borderRadius: 99,
+              marginBottom: 4,
+            }}
+          >
+            ADMIN
+          </span>
+          <p style={{ color: "#fff", fontWeight: 600, fontSize: 14, margin: 0 }}>
+            {profile.first_name} {profile.last_name}
+          </p>
+        </div>
+
+        {/* Actions droite */}
+        <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 16 }}>
+          <a
+            href="/formation"
+            style={{ color: "#9aa5b8", fontSize: 13, textDecoration: "none" }}
+          >
+            Voir comme apprenant
+          </a>
           <form action="/api/auth/logout" method="POST">
-            <button className="text-sm text-gray-300 hover:text-white transition">Deconnexion</button>
+            <button
+              style={{
+                color: "#9aa5b8",
+                border: "1px solid rgba(255,255,255,0.15)",
+                borderRadius: 8,
+                padding: "7px 14px",
+                background: "transparent",
+                cursor: "pointer",
+                fontSize: 13,
+              }}
+            >
+              Déconnexion
+            </button>
           </form>
         </div>
       </header>
@@ -100,7 +159,7 @@ export default async function AdminPage() {
           </div>
           <div className="bg-white rounded-xl p-5 shadow-sm text-center">
             <p className="text-3xl font-bold text-[#0f1f3d]">{avgCompletion}%</p>
-            <p className="text-sm text-gray-500">Completion moyenne</p>
+            <p className="text-sm text-gray-500">Complétion moyenne</p>
           </div>
           <div className="bg-white rounded-xl p-5 shadow-sm text-center">
             <p className="text-3xl font-bold text-[#0f1f3d]">{totalChapters}</p>

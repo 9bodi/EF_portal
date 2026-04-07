@@ -1,62 +1,137 @@
 ﻿"use client";
+
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 
-function LoginForm() {
+export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const resetSuccess = searchParams.get("reset") === "success";
   const supabase = createClient();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
     setError("");
+    setLoading(true);
+
     const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
-    if (authError) { setError("Email ou mot de passe incorrect"); setLoading(false); return; }
+
+    if (authError) {
+      setError("Email ou mot de passe incorrect. Vérifiez vos informations ou contactez-nous.");
+      setLoading(false);
+      return;
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setError("Erreur de connexion"); setLoading(false); return; }
-    const { data: profile } = await supabase.from("users").select("*").eq("id", user.id).single();
-    if (profile?.must_change_password) { router.push("/first-login"); }
-    else if (profile?.role === "admin") { router.push("/admin"); }
-    else { router.push("/formation"); }
-  };
+    if (user) {
+      const { data: profile } = await supabase
+        .from("users")
+        .select("must_change_password, role")
+        .eq("id", user.id)
+        .single();
+
+      if (profile?.must_change_password) {
+        router.push("/first-login");
+        return;
+      }
+      if (profile?.role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/formation");
+      }
+    }
+  }
 
   return (
-    <div className="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md">
-      <h1 className="text-3xl font-bold text-center text-[#0f1f3d] mb-2">Elu Formation</h1>
-      <p className="text-center text-gray-500 mb-8">Connectez-vous a votre espace</p>
-      {resetSuccess && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4 text-center">
-          <p className="text-green-700 text-sm">Mot de passe modifie avec succes. Connectez-vous.</p>
+    <div style={{ minHeight: "100vh", background: "#0f1f3d", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 16px", fontFamily: "'DM Sans', sans-serif" }}>
+
+      {/* Logo */}
+      <div style={{ marginBottom: 40, textAlign: "center" }}>
+        <Image
+          src="/img/LOGO_ELU-FORMATION_BLANC100.png"
+          alt="Élu Formation"
+          width={220}
+          height={72}
+          style={{ objectFit: "contain" }}
+          priority
+        />
+        <p style={{ color: "rgba(255,255,255,0.55)", marginTop: 12, fontSize: 15 }}>
+          Votre espace de formation
+        </p>
+      </div>
+
+      {/* Card */}
+      <div style={{ background: "#fff", borderRadius: 20, boxShadow: "0 20px 60px rgba(0,0,0,0.3)", padding: "40px 40px", width: "100%", maxWidth: 420 }}>
+        <h2 style={{ fontSize: 26, fontWeight: 700, color: "#0f1f3d", marginBottom: 32, textAlign: "center" }}>
+          Connexion
+        </h2>
+
+        <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <div>
+            <label htmlFor="email" style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#374151", marginBottom: 6 }}>
+              Adresse email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              style={{ width: "100%", padding: "12px 16px", fontSize: 15, border: "2px solid #e5e7eb", borderRadius: 10, outline: "none", boxSizing: "border-box" }}
+              placeholder="votre@email.fr"
+              required
+              autoComplete="email"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="password" style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#374151", marginBottom: 6 }}>
+              Mot de passe
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={{ width: "100%", padding: "12px 16px", fontSize: 15, border: "2px solid #e5e7eb", borderRadius: 10, outline: "none", boxSizing: "border-box" }}
+              placeholder="Votre mot de passe"
+              required
+              autoComplete="current-password"
+            />
+          </div>
+
+          {error && (
+            <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626", padding: "12px 16px", borderRadius: 10, fontSize: 14 }}>
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{ background: "#0f1f3d", color: "#fff", border: "none", borderRadius: 10, padding: "14px", fontSize: 15, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1, marginTop: 4 }}
+          >
+            {loading ? "Connexion en cours..." : "Accéder à ma formation"}
+          </button>
+        </form>
+
+        <div style={{ marginTop: 24, textAlign: "center" }}>
+          <a href="/reset-password" style={{ color: "#0f1f3d", fontSize: 14, textDecoration: "underline" }}>
+            Mot de passe oublié ?
+          </a>
         </div>
-      )}
-      <form onSubmit={handleLogin} className="space-y-5">
-        <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#0f1f3d] outline-none text-gray-800" />
-        <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#0f1f3d] outline-none text-gray-800" />
-        {error && <p className="text-red-500 text-sm">{error}</p>}
-        <button type="submit" disabled={loading} className="w-full py-3 bg-[#0f1f3d] text-white rounded-lg font-semibold hover:bg-[#1a3a6b] transition disabled:opacity-50">
-          {loading ? "Connexion..." : "Se connecter"}
-        </button>
-      </form>
-      <a href="/forgot-password" className="block text-center text-sm text-gray-400 mt-4 hover:text-[#0f1f3d] transition">Mot de passe oublie ?</a>
-      <p className="text-center text-gray-400 text-sm mt-6">Support : contact@eluformation.fr</p>
-    </div>
-  );
-}
+      </div>
 
-export default function LoginPage() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f1f3d] to-[#1a3a6b]">
-      <Suspense fallback={<div className="text-white">Chargement...</div>}>
-        <LoginForm />
-      </Suspense>
+      {/* Footer */}
+      <div style={{ marginTop: 32, textAlign: "center", color: "rgba(255,255,255,0.45)", fontSize: 13 }}>
+        <p>Besoin d&apos;aide ? Contactez-nous</p>
+        <p style={{ marginTop: 4, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>
+          contact@eluformation.fr
+        </p>
+      </div>
     </div>
   );
 }

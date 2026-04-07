@@ -43,3 +43,8 @@ next-env.d.ts
 *.mp4
 
 *.mp4
+*.mp4
+*.MP4
+node_modules/
+.next/
+.env*.local
