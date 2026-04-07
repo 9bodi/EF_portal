@@ -63,14 +63,14 @@ export default function CreateLearnerForm() {
         <input type="text" placeholder="Prenom *" value={form.firstName} onChange={(e) => setForm({...form, firstName: e.target.value})} required className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
         <input type="text" placeholder="Nom *" value={form.lastName} onChange={(e) => setForm({...form, lastName: e.target.value})} required className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
         <input type="email" placeholder="Email *" value={form.email} onChange={(e) => setForm({...form, email: e.target.value})} required className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
-        <input type="tel" placeholder="Telephone" value={form.phone} onChange={(e) => setForm({...form, phone: e.target.value})} className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
-        <input type="text" placeholder="Commune *" value={form.commune} onChange={(e) => setForm({...form, commune: e.target.value})} required className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
         <input type="text" placeholder="Code postal *" value={form.postalCode} onChange={(e) => setForm({...form, postalCode: e.target.value})} required className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
         <select value={form.fundingType} onChange={(e) => setForm({...form, fundingType: e.target.value})} required className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]">
           <option value="">Financement *</option>
           <option value="dif">DIF elu</option>
           <option value="cohort">Cohorte / Collectivite</option>
         </select>
+        <input type="text" placeholder="Commune" value={form.commune} onChange={(e) => setForm({...form, commune: e.target.value})} className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
+        <input type="tel" placeholder="Telephone" value={form.phone} onChange={(e) => setForm({...form, phone: e.target.value})} className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
         <input type="text" placeholder="Nom du groupe" value={form.groupName} onChange={(e) => setForm({...form, groupName: e.target.value})} className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
         <div className="md:col-span-2">
           <button type="submit" disabled={loading} className="px-6 py-2 bg-[#0f1f3d] text-white rounded-lg text-sm font-semibold hover:bg-[#1a3a6b] transition disabled:opacity-50">

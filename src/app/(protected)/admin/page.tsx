@@ -2,6 +2,8 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import CreateLearnerForm from "@/components/admin/CreateLearnerForm";
+import ImportLearnersForm from "@/components/admin/ImportLearnersForm";
+import LearnersTable from "@/components/admin/LearnersTable";
 
 function getAdminClient() {
   return createSupabaseClient(
@@ -27,14 +29,8 @@ export default async function AdminPage() {
     .neq("role", "admin")
     .order("last_name");
 
-  const { data: allProgress } = await admin
-    .from("scorm_progress")
-    .select("*");
-
-  const { data: chapters } = await admin
-    .from("chapters")
-    .select("id, title")
-    .order("order");
+  const { data: allProgress } = await admin.from("scorm_progress").select("*");
+  const { data: chapters } = await admin.from("chapters").select("id, title").order("order");
 
   const totalChapters = (chapters || []).length;
 
@@ -92,7 +88,7 @@ export default async function AdminPage() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-xl p-5 shadow-sm text-center">
             <p className="text-3xl font-bold text-[#0f1f3d]">{totalLearners}</p>
@@ -112,61 +108,12 @@ export default async function AdminPage() {
           </div>
         </div>
 
-        <CreateLearnerForm />
-
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b">
-            <h2 className="text-lg font-bold text-[#0f1f3d]">Apprenants</h2>
-          </div>
-          {totalLearners === 0 ? (
-            <div className="px-6 py-12 text-center text-gray-400">
-              <p className="text-lg">Aucun apprenant inscrit</p>
-              <p className="text-sm mt-2">Utilisez le formulaire ci-dessus pour inscrire un apprenant</p>
-            </div>
-          ) : (
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nom</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Commune</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Financement</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Progression</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Temps</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Score</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Dernier acces</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {learnersWithStats.map((l: any) => (
-                  <tr key={l.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm font-medium text-[#0f1f3d]">
-                      <a href={"/admin/learner/" + l.id} className="hover:underline">
-                        {l.last_name} {l.first_name}
-                      </a>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">{l.email}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500">{l.commune ? l.commune + (l.postal_code ? " (" + l.postal_code + ")" : "") : "-"}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500">{l.funding_type === "dif" ? "DIF" : l.funding_type === "cohort" ? "Cohorte" : "-"}</td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="w-20 bg-gray-200 rounded-full h-2">
-                          <div className="bg-[#0f1f3d] h-2 rounded-full" style={{ width: l.pct + "%" }} />
-                        </div>
-                        <span className="text-xs text-gray-500">{l.completed}/{l.totalChapters}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500 text-center">{l.timeStr}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500 text-center">{l.scoreStr}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500 text-center">
-                      {l.lastAccess ? new Date(l.lastAccess).toLocaleDateString("fr-FR") : "-"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+        <div className="flex gap-3 mb-6 items-start flex-wrap">
+          <CreateLearnerForm />
+          <ImportLearnersForm />
         </div>
+
+        <LearnersTable learners={learnersWithStats} />
       </main>
     </div>
   );

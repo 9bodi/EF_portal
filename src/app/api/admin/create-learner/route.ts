@@ -1,6 +1,7 @@
 ﻿import { createClient } from "@/lib/supabase/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { sendWelcomeEmail } from "@/lib/email";
 
 function getAdminClient() {
   return createSupabaseClient(
@@ -21,8 +22,8 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
   const { email, firstName, lastName, phone, fundingType, commune, postalCode, groupName } = body;
 
-  if (!email || !firstName || !lastName || !commune || !postalCode || !fundingType) {
-    return NextResponse.json({ error: "Email, prenom, nom, commune, code postal et financement requis" }, { status: 400 });
+  if (!email || !firstName || !lastName || !postalCode || !fundingType) {
+    return NextResponse.json({ error: "Email, prenom, nom, code postal et financement requis" }, { status: 400 });
   }
 
   if (fundingType !== "dif" && fundingType !== "cohort") {
@@ -48,7 +49,6 @@ export async function POST(request: NextRequest) {
     email,
     first_name: firstName,
     last_name: lastName,
-    commune,
     postal_code: postalCode,
     funding_type: fundingType,
     role: "learner",
@@ -56,6 +56,7 @@ export async function POST(request: NextRequest) {
     created_at: new Date().toISOString(),
   };
   if (phone) insertData.phone = phone;
+  if (commune) insertData.commune = commune;
   if (groupName) insertData.group_name = groupName;
 
   const { error: profileError } = await admin.from("users").insert(insertData);
@@ -65,6 +66,8 @@ export async function POST(request: NextRequest) {
     await admin.auth.admin.deleteUser(authUser.user.id);
     return NextResponse.json({ error: profileError.message }, { status: 500 });
   }
+
+  await sendWelcomeEmail(email, firstName, tempPassword);
 
   return NextResponse.json({
     success: true,
