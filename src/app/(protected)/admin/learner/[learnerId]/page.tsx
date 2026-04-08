@@ -1,6 +1,7 @@
 ﻿import { createClient } from "@/lib/supabase/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
+import UnlockButton from "@/components/admin/UnlockButton";
 
 function getAdminClient() {
   return createSupabaseClient(
@@ -87,7 +88,7 @@ export default async function LearnerDetailPage({ params }: PageProps) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm text-gray-600">
             <div><span className="text-gray-400">Email</span><br/>{learner.email}</div>
             <div><span className="text-gray-400">Telephone</span><br/>{learner.phone || "-"}</div>
-            <div><span className="text-gray-400">Commune</span><br/>{learner.commune ? learner.commune + (learner.postal_code ? " (" + learner.postal_code + ")" : "") : "-"}</div>
+            <div><span className="text-gray-400">Commune</span><br/>{learner.commune ? learner.commune + (learner.postal_code ? " (" + learner.postal_code + ")" : "") : learner.postal_code || "-"}</div>
             <div><span className="text-gray-400">Financement</span><br/>{learner.funding_type === "dif" ? "DIF elu" : learner.funding_type === "cohort" ? "Cohorte" : "-"}</div>
             <div><span className="text-gray-400">Groupe</span><br/>{learner.group_name || "-"}</div>
             <div><span className="text-gray-400">Inscrit le</span><br/>{new Date(learner.created_at).toLocaleDateString("fr-FR")}</div>
@@ -127,6 +128,7 @@ export default async function LearnerDetailPage({ params }: PageProps) {
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Score</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Termine le</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Dernier acces</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -147,6 +149,11 @@ export default async function LearnerDetailPage({ params }: PageProps) {
                     <td className="px-6 py-4 text-sm text-gray-500 text-center">{ch.score !== null ? ch.score + "%" : "-"}</td>
                     <td className="px-6 py-4 text-sm text-gray-500 text-center">{ch.completed_at ? new Date(ch.completed_at).toLocaleDateString("fr-FR") : "-"}</td>
                     <td className="px-6 py-4 text-sm text-gray-500 text-center">{ch.last_accessed_at ? new Date(ch.last_accessed_at).toLocaleDateString("fr-FR") : "-"}</td>
+                    <td className="px-6 py-4 text-center">
+                      {!isCompleted && (
+                        <UnlockButton learnerId={learnerId} chapterId={ch.id} />
+                      )}
+                    </td>
                   </tr>
                 );
               })}

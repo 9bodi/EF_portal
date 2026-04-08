@@ -3,15 +3,44 @@
 import { ChapterWithProgress } from "@/types";
 
 export default function ChapterList({ chapters }: { chapters: ChapterWithProgress[] }) {
-  const total = chapters.length;
+  const sorted = [...chapters].sort((a, b) => a.order - b.order);
+  const total = sorted.length;
   const cols = 3;
   const rows = Math.ceil(total / cols);
 
-  // Construit la grille en S
+  // Déverrouillage : intro + module 1 toujours ouverts
+  // Les suivants se débloquent dès que le précédent a été ouvert (incomplete, completed ou passed)
+  const unlockedSet = new Set<string>();
+  for (let i = 0; i < sorted.length; i++) {
+    const ch = sorted[i];
+    const status = ch.progress?.status;
+
+    // Module 0 et 1 toujours accessibles
+    if (ch.order <= 1) {
+      unlockedSet.add(ch.id);
+      continue;
+    }
+
+    // Si le module lui-même a déjà été ouvert, il reste accessible
+    if (status === "incomplete" || status === "completed" || status === "passed") {
+      unlockedSet.add(ch.id);
+      continue;
+    }
+
+    // Sinon, on regarde si le précédent a été ouvert
+    const prev = sorted.find((c) => c.order === ch.order - 1);
+    if (prev) {
+      const prevStatus = prev.progress?.status;
+      if (prevStatus === "incomplete" || prevStatus === "completed" || prevStatus === "passed") {
+        unlockedSet.add(ch.id);
+      }
+    }
+  }
+
   function buildGrid(): (ChapterWithProgress | null)[][] {
     const grid: (ChapterWithProgress | null)[][] = [];
     for (let r = 0; r < rows; r++) {
-      const rowItems: (ChapterWithProgress | null)[] = chapters.slice(r * cols, r * cols + cols);
+      const rowItems: (ChapterWithProgress | null)[] = sorted.slice(r * cols, r * cols + cols);
       while (rowItems.length < cols) rowItems.push(null);
       grid.push(r % 2 === 1 ? [...rowItems].reverse() : rowItems);
     }
@@ -34,7 +63,6 @@ export default function ChapterList({ chapters }: { chapters: ChapterWithProgres
       {grid.map((row, rowIdx) => {
         const isLastRow = rowIdx === rows - 1;
         const leftToRight = rowIdx % 2 === 0;
-        // Index dans la grille de la dernière case de cette rangée (celle qui a le trait vertical)
         const endColIdx = leftToRight ? cols - 1 : 0;
 
         return (
@@ -45,12 +73,11 @@ export default function ChapterList({ chapters }: { chapters: ChapterWithProgres
               const status = chapter.progress?.status;
               const isDone = status === "completed" || status === "passed";
               const isActive = status === "incomplete";
-              const isLocked = !status || status === "not_started";
+              const isUnlocked = unlockedSet.has(chapter.id);
+              const isLocked = !isUnlocked;
               const timeDisplay = formatTime(chapter.progress?.total_time);
 
-              // Trait vertical : dernière case de chaque rangée sauf dernière rangée
               const showDown = colIdx === endColIdx && !isLastRow;
-              // Trait horizontal : toutes les cases sauf la dernière de la rangée (endColIdx)
               const showRight = colIdx !== endColIdx;
 
               return (
@@ -64,7 +91,6 @@ export default function ChapterList({ chapters }: { chapters: ChapterWithProgres
                     position: "relative",
                   }}
                 >
-                  {/* Trait horizontal entre cases — dans le gap entre les cards */}
                   {showRight && (
                     <div style={{
                       position: "absolute",
@@ -78,7 +104,6 @@ export default function ChapterList({ chapters }: { chapters: ChapterWithProgres
                     }} />
                   )}
 
-                  {/* Trait vertical entre rangées */}
                   {showDown && (
                     <div style={{
                       position: "absolute",
@@ -101,7 +126,7 @@ export default function ChapterList({ chapters }: { chapters: ChapterWithProgres
                       borderRadius: 14,
                       padding: "18px 16px",
                       cursor: isLocked ? "default" : "pointer",
-                      opacity: isLocked ? 0.5 : 1,
+                      opacity: isLocked ? 0.45 : 1,
                       position: "relative",
                       transition: "transform .2s, box-shadow .2s",
                       boxSizing: "border-box",
@@ -117,19 +142,33 @@ export default function ChapterList({ chapters }: { chapters: ChapterWithProgres
                       (e.currentTarget as HTMLAnchorElement).style.boxShadow = "";
                     }}
                   >
-                    {/* Badge statut */}
-                    {(isDone || isActive) && (
+                    {isDone && (
                       <span style={{
                         position: "absolute", top: 12, right: 12,
                         padding: "3px 8px", borderRadius: 99, fontSize: 11, fontWeight: 500,
-                        background: isDone ? "#dcfce7" : "#0f1f3d",
-                        color: isDone ? "#15803d" : "#fff",
+                        background: "#dcfce7", color: "#15803d",
                       }}>
-                        {isDone ? "Terminé" : "En cours"}
+                        Terminé
+                      </span>
+                    )}
+                    {isActive && (
+                      <span style={{
+                        position: "absolute", top: 12, right: 12,
+                        padding: "3px 8px", borderRadius: 99, fontSize: 11, fontWeight: 500,
+                        background: "#0f1f3d", color: "#fff",
+                      }}>
+                        En cours
+                      </span>
+                    )}
+                    {isLocked && (
+                      <span style={{
+                        position: "absolute", top: 12, right: 12,
+                        fontSize: 14, opacity: 0.4,
+                      }}>
+                        🔒
                       </span>
                     )}
 
-                    {/* Numéro chapitre */}
                     <div style={{
                       fontSize: 11, fontWeight: 500, color: "#6b7280",
                       marginBottom: 8, display: "flex", alignItems: "center", gap: 4,
@@ -139,15 +178,13 @@ export default function ChapterList({ chapters }: { chapters: ChapterWithProgres
                         background: isDone ? "#22c55e" : isActive ? "#0f1f3d" : "#d1d5db",
                         flexShrink: 0,
                       }} />
-                      Chapitre {chapter.order}
+                      {chapter.order === 0 ? "Introduction" : `Chapitre ${chapter.order}`}
                     </div>
 
-                    {/* Titre */}
                     <p style={{ fontSize: 13, fontWeight: 500, color: "#1a1a2e", lineHeight: 1.4, marginBottom: "auto" }}>
                       {chapter.title}
                     </p>
 
-                    {/* Temps */}
                     {timeDisplay ? (
                       <p style={{ fontSize: 11, color: "#6b7280", marginTop: 6 }}>{timeDisplay}</p>
                     ) : chapter.estimated_duration ? (
