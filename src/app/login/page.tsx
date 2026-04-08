@@ -47,7 +47,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0f1f3d", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 16px", fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#373b94", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 16px", fontFamily: "'DM Sans', sans-serif" }}>
 
       {/* Logo */}
       <div style={{ marginBottom: 40, textAlign: "center" }}>
@@ -66,7 +66,7 @@ export default function LoginPage() {
 
       {/* Card */}
       <div style={{ background: "#fff", borderRadius: 20, boxShadow: "0 20px 60px rgba(0,0,0,0.3)", padding: "40px 40px", width: "100%", maxWidth: 420 }}>
-        <h2 style={{ fontSize: 26, fontWeight: 700, color: "#0f1f3d", marginBottom: 32, textAlign: "center" }}>
+        <h2 style={{ fontSize: 26, fontWeight: 700, color: "#373b94", marginBottom: 32, textAlign: "center" }}>
           Connexion
         </h2>
 
@@ -112,14 +112,14 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            style={{ background: "#0f1f3d", color: "#fff", border: "none", borderRadius: 10, padding: "14px", fontSize: 15, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1, marginTop: 4 }}
+            style={{ background: "#373b94", color: "#fff", border: "none", borderRadius: 10, padding: "14px", fontSize: 15, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1, marginTop: 4 }}
           >
             {loading ? "Connexion en cours..." : "Accéder à ma formation"}
           </button>
         </form>
 
         <div style={{ marginTop: 24, textAlign: "center" }}>
-          <a href="/reset-password" style={{ color: "#0f1f3d", fontSize: 14, textDecoration: "underline" }}>
+          <a href="/reset-password" style={{ color: "#373b94", fontSize: 14, textDecoration: "underline" }}>
             Mot de passe oublié ?
           </a>
         </div>
@@ -135,3 +135,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

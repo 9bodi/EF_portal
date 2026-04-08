@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useRef } from "react";
 
 interface ImportResult {
@@ -64,7 +64,7 @@ export default function ImportLearnersForm() {
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="px-4 py-2 bg-[#1a3a6b] text-white rounded-lg text-sm font-semibold hover:bg-[#0f1f3d] transition">
+      <button onClick={() => setOpen(true)} className="px-4 py-2 bg-[#4a4fbf] text-white rounded-lg text-sm font-semibold hover:bg-[#373b94] transition">
         Importer CSV
       </button>
     );
@@ -73,7 +73,7 @@ export default function ImportLearnersForm() {
   return (
     <div className="bg-white rounded-xl p-6 shadow-sm mb-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-[#0f1f3d]">Import CSV</h3>
+        <h3 className="text-lg font-bold text-[#373b94]">Import CSV</h3>
         <button onClick={() => { setOpen(false); setResults(null); setError(""); setFileName(""); }} className="text-gray-400 hover:text-gray-600 text-sm">Fermer</button>
       </div>
 
@@ -81,7 +81,7 @@ export default function ImportLearnersForm() {
         <p className="font-medium mb-1">Format attendu (CSV, separateur virgule ou point-virgule) :</p>
         <code className="text-xs bg-gray-200 px-2 py-1 rounded block mt-1">prenom,nom,email,code_postal,financement,telephone,commune,groupe</code>
         <p className="mt-2 text-xs text-gray-400">Colonnes obligatoires : prenom, nom, email, code_postal, financement (dif ou cohort). Les autres sont optionnelles.</p>
-        <button onClick={downloadTemplate} className="mt-3 text-sm text-[#0f1f3d] font-medium underline hover:no-underline">
+        <button onClick={downloadTemplate} className="mt-3 text-sm text-[#373b94] font-medium underline hover:no-underline">
           Telecharger le template CSV
         </button>
       </div>
@@ -102,7 +102,7 @@ export default function ImportLearnersForm() {
               </div>
             )}
           </div>
-          <button onClick={downloadResults} className="text-sm text-[#0f1f3d] underline hover:no-underline">
+          <button onClick={downloadResults} className="text-sm text-[#373b94] underline hover:no-underline">
             Telecharger les resultats (mots de passe inclus)
           </button>
           <div className="mt-3 max-h-60 overflow-y-auto">
@@ -127,10 +127,11 @@ export default function ImportLearnersForm() {
         <button type="button" onClick={() => fileRef.current?.click()} className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition">
           {fileName || "Choisir un fichier CSV"}
         </button>
-        <button type="submit" disabled={loading || !fileName} className="px-6 py-2 bg-[#0f1f3d] text-white rounded-lg text-sm font-semibold hover:bg-[#1a3a6b] transition disabled:opacity-50">
+        <button type="submit" disabled={loading || !fileName} className="px-6 py-2 bg-[#373b94] text-white rounded-lg text-sm font-semibold hover:bg-[#4a4fbf] transition disabled:opacity-50">
           {loading ? "Import en cours..." : "Importer"}
         </button>
       </form>
     </div>
   );
 }
+

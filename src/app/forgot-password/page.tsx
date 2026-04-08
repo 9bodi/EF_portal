@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState } from "react";
 
 export default function ForgotPasswordPage() {
@@ -23,14 +23,14 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f1f3d] to-[#1a3a6b]">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#373b94] to-[#4a4fbf]">
       <div className="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md">
-        <h1 className="text-2xl font-bold text-center text-[#0f1f3d] mb-2">Mot de passe oublie</h1>
+        <h1 className="text-2xl font-bold text-center text-[#373b94] mb-2">Mot de passe oublie</h1>
 
         {sent ? (
           <div className="text-center">
             <p className="text-gray-600 mt-4">Si un compte existe avec cette adresse, vous recevrez un email avec les instructions pour reinitialiser votre mot de passe.</p>
-            <a href="/login" className="inline-block mt-6 text-sm text-[#0f1f3d] font-medium hover:underline">Retour a la connexion</a>
+            <a href="/login" className="inline-block mt-6 text-sm text-[#373b94] font-medium hover:underline">Retour a la connexion</a>
           </div>
         ) : (
           <>
@@ -42,10 +42,10 @@ export default function ForgotPasswordPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#0f1f3d] outline-none text-gray-800"
+                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#373b94] outline-none text-gray-800"
               />
               {error && <p className="text-red-500 text-sm">{error}</p>}
-              <button type="submit" disabled={loading} className="w-full py-3 bg-[#0f1f3d] text-white rounded-lg font-semibold hover:bg-[#1a3a6b] transition disabled:opacity-50">
+              <button type="submit" disabled={loading} className="w-full py-3 bg-[#373b94] text-white rounded-lg font-semibold hover:bg-[#4a4fbf] transition disabled:opacity-50">
                 {loading ? "Envoi..." : "Envoyer"}
               </button>
             </form>
@@ -56,3 +56,4 @@ export default function ForgotPasswordPage() {
     </div>
   );
 }
+

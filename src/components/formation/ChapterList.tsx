@@ -99,7 +99,7 @@ export default function ChapterList({ chapters }: { chapters: ChapterWithProgres
                         : { left: "-9px" }),
                       top: "50%", transform: "translateY(-50%)",
                       width: "18px", height: 2,
-                      background: "#0f1f3d", opacity: 0.25, zIndex: 2,
+                      background: "#373b94", opacity: 0.25, zIndex: 2,
                       pointerEvents: "none",
                     }} />
                   )}
@@ -109,7 +109,7 @@ export default function ChapterList({ chapters }: { chapters: ChapterWithProgres
                       position: "absolute",
                       bottom: -10, left: "50%", transform: "translateX(-50%)",
                       width: 2, height: 20,
-                      background: "#0f1f3d", opacity: 0.25, zIndex: 2,
+                      background: "#373b94", opacity: 0.25, zIndex: 2,
                     }} />
                   )}
 
@@ -122,7 +122,7 @@ export default function ChapterList({ chapters }: { chapters: ChapterWithProgres
                       height: 160,
                       textDecoration: "none",
                       background: "#fff",
-                      border: isActive ? "2px solid #0f1f3d" : "1.5px solid rgba(15,31,61,0.10)",
+                      border: isActive ? "2px solid #373b94" : "1.5px solid rgba(15,31,61,0.10)",
                       borderRadius: 14,
                       padding: "18px 16px",
                       cursor: isLocked ? "default" : "pointer",
@@ -155,7 +155,7 @@ export default function ChapterList({ chapters }: { chapters: ChapterWithProgres
                       <span style={{
                         position: "absolute", top: 12, right: 12,
                         padding: "3px 8px", borderRadius: 99, fontSize: 11, fontWeight: 500,
-                        background: "#0f1f3d", color: "#fff",
+                        background: "#373b94", color: "#fff",
                       }}>
                         En cours
                       </span>
@@ -175,7 +175,7 @@ export default function ChapterList({ chapters }: { chapters: ChapterWithProgres
                     }}>
                       <span style={{
                         width: 8, height: 8, borderRadius: "50%", display: "inline-block",
-                        background: isDone ? "#22c55e" : isActive ? "#0f1f3d" : "#d1d5db",
+                        background: isDone ? "#22c55e" : isActive ? "#373b94" : "#d1d5db",
                         flexShrink: 0,
                       }} />
                       {chapter.order === 0 ? "Introduction" : `Chapitre ${chapter.order}`}
@@ -200,3 +200,4 @@ export default function ChapterList({ chapters }: { chapters: ChapterWithProgres
     </div>
   );
 }
+

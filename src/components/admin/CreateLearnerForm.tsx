@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState } from "react";
 
 export default function CreateLearnerForm() {
@@ -34,7 +34,7 @@ export default function CreateLearnerForm() {
   if (!open) {
     return (
       <div className="mb-6">
-        <button onClick={() => setOpen(true)} className="px-4 py-2 bg-[#0f1f3d] text-white rounded-lg text-sm font-semibold hover:bg-[#1a3a6b] transition">
+        <button onClick={() => setOpen(true)} className="px-4 py-2 bg-[#373b94] text-white rounded-lg text-sm font-semibold hover:bg-[#4a4fbf] transition">
           + Inscrire un apprenant
         </button>
       </div>
@@ -44,7 +44,7 @@ export default function CreateLearnerForm() {
   return (
     <div className="bg-white rounded-xl p-6 shadow-sm mb-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-[#0f1f3d]">Inscrire un apprenant</h3>
+        <h3 className="text-lg font-bold text-[#373b94]">Inscrire un apprenant</h3>
         <button onClick={() => { setOpen(false); setResult(null); setError(""); }} className="text-gray-400 hover:text-gray-600 text-sm">Fermer</button>
       </div>
 
@@ -60,20 +60,20 @@ export default function CreateLearnerForm() {
       {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <input type="text" placeholder="Prenom *" value={form.firstName} onChange={(e) => setForm({...form, firstName: e.target.value})} required className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
-        <input type="text" placeholder="Nom *" value={form.lastName} onChange={(e) => setForm({...form, lastName: e.target.value})} required className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
-        <input type="email" placeholder="Email *" value={form.email} onChange={(e) => setForm({...form, email: e.target.value})} required className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
-        <input type="text" placeholder="Code postal *" value={form.postalCode} onChange={(e) => setForm({...form, postalCode: e.target.value})} required className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
-        <select value={form.fundingType} onChange={(e) => setForm({...form, fundingType: e.target.value})} required className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]">
+        <input type="text" placeholder="Prenom *" value={form.firstName} onChange={(e) => setForm({...form, firstName: e.target.value})} required className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#373b94]" />
+        <input type="text" placeholder="Nom *" value={form.lastName} onChange={(e) => setForm({...form, lastName: e.target.value})} required className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#373b94]" />
+        <input type="email" placeholder="Email *" value={form.email} onChange={(e) => setForm({...form, email: e.target.value})} required className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#373b94]" />
+        <input type="text" placeholder="Code postal *" value={form.postalCode} onChange={(e) => setForm({...form, postalCode: e.target.value})} required className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#373b94]" />
+        <select value={form.fundingType} onChange={(e) => setForm({...form, fundingType: e.target.value})} required className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#373b94]">
           <option value="">Financement *</option>
           <option value="dif">DIF elu</option>
           <option value="cohort">Cohorte / Collectivite</option>
         </select>
-        <input type="text" placeholder="Commune" value={form.commune} onChange={(e) => setForm({...form, commune: e.target.value})} className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
-        <input type="tel" placeholder="Telephone" value={form.phone} onChange={(e) => setForm({...form, phone: e.target.value})} className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
-        <input type="text" placeholder="Nom du groupe" value={form.groupName} onChange={(e) => setForm({...form, groupName: e.target.value})} className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
+        <input type="text" placeholder="Commune" value={form.commune} onChange={(e) => setForm({...form, commune: e.target.value})} className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#373b94]" />
+        <input type="tel" placeholder="Telephone" value={form.phone} onChange={(e) => setForm({...form, phone: e.target.value})} className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#373b94]" />
+        <input type="text" placeholder="Nom du groupe" value={form.groupName} onChange={(e) => setForm({...form, groupName: e.target.value})} className="px-4 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#373b94]" />
         <div className="md:col-span-2">
-          <button type="submit" disabled={loading} className="px-6 py-2 bg-[#0f1f3d] text-white rounded-lg text-sm font-semibold hover:bg-[#1a3a6b] transition disabled:opacity-50">
+          <button type="submit" disabled={loading} className="px-6 py-2 bg-[#373b94] text-white rounded-lg text-sm font-semibold hover:bg-[#4a4fbf] transition disabled:opacity-50">
             {loading ? "Creation..." : "Creer le compte"}
           </button>
         </div>
@@ -81,3 +81,4 @@ export default function CreateLearnerForm() {
     </div>
   );
 }
+

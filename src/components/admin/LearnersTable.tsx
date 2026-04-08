@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -69,7 +69,7 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
     const doc = new jsPDF({ orientation: "landscape" });
     const pageW = doc.internal.pageSize.getWidth();
 
-    doc.setFillColor(15, 31, 61);
+    doc.setFillColor(55, 59, 148);
     doc.rect(0, 0, pageW, 32, "F");
 
     if (logoWhite) {
@@ -124,7 +124,7 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
       head: [["Nom", "Email", "CP", "Financement", "Groupe", "Inscription", "Progression", "Temps", "Score", "Dernier acces"]],
       body: tableData,
       styles: { fontSize: 7, cellPadding: 3, lineColor: [220, 220, 220], lineWidth: 0.2 },
-      headStyles: { fillColor: [15, 31, 61], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 7 },
+      headStyles: { fillColor: [55, 59, 148], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 7 },
       alternateRowStyles: { fillColor: [245, 247, 250] },
       columnStyles: {
         0: { cellWidth: 35 },
@@ -182,15 +182,15 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
   return (
     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
       <div className="px-6 py-4 border-b flex items-center justify-between flex-wrap gap-3">
-        <h2 className="text-lg font-bold text-[#0f1f3d]">Apprenants ({filtered.length})</h2>
+        <h2 className="text-lg font-bold text-[#373b94]">Apprenants ({filtered.length})</h2>
         <div className="flex gap-2">
           <button onClick={() => setShowFilters(!showFilters)} className="px-3 py-1.5 text-sm border rounded-lg text-gray-600 hover:bg-gray-50 transition">
             {showFilters ? "Masquer filtres" : "Filtres"}
           </button>
-          <button onClick={exportPDF} className="px-3 py-1.5 text-sm bg-[#0f1f3d] text-white rounded-lg font-medium hover:bg-[#1a3a6b] transition">
+          <button onClick={exportPDF} className="px-3 py-1.5 text-sm bg-[#373b94] text-white rounded-lg font-medium hover:bg-[#4a4fbf] transition">
             Export PDF
           </button>
-          <button onClick={exportCSV} className="px-3 py-1.5 text-sm border border-[#0f1f3d] text-[#0f1f3d] rounded-lg font-medium hover:bg-gray-50 transition">
+          <button onClick={exportCSV} className="px-3 py-1.5 text-sm border border-[#373b94] text-[#373b94] rounded-lg font-medium hover:bg-gray-50 transition">
             Export CSV
           </button>
         </div>
@@ -198,19 +198,19 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
 
       {showFilters && (
         <div className="px-6 py-4 bg-gray-50 border-b grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <input type="text" placeholder="Nom, prenom, email..." value={filters.search} onChange={(e) => setFilters({...filters, search: e.target.value})} className="px-3 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
-          <input type="text" placeholder="Code postal" value={filters.postalCode} onChange={(e) => setFilters({...filters, postalCode: e.target.value})} className="px-3 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" />
-          <select value={filters.groupName} onChange={(e) => setFilters({...filters, groupName: e.target.value})} className="px-3 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]">
+          <input type="text" placeholder="Nom, prenom, email..." value={filters.search} onChange={(e) => setFilters({...filters, search: e.target.value})} className="px-3 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#373b94]" />
+          <input type="text" placeholder="Code postal" value={filters.postalCode} onChange={(e) => setFilters({...filters, postalCode: e.target.value})} className="px-3 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#373b94]" />
+          <select value={filters.groupName} onChange={(e) => setFilters({...filters, groupName: e.target.value})} className="px-3 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#373b94]">
             <option value="">Tous les groupes</option>
             {groups.map((g) => <option key={g} value={g}>{g}</option>)}
           </select>
-          <select value={filters.fundingType} onChange={(e) => setFilters({...filters, fundingType: e.target.value})} className="px-3 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]">
+          <select value={filters.fundingType} onChange={(e) => setFilters({...filters, fundingType: e.target.value})} className="px-3 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#373b94]">
             <option value="">Tout financement</option>
             <option value="dif">DIF</option>
             <option value="cohort">Cohorte</option>
           </select>
-          <input type="date" value={filters.dateFrom} onChange={(e) => setFilters({...filters, dateFrom: e.target.value})} className="px-3 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" title="Inscrit depuis" />
-          <input type="date" value={filters.dateTo} onChange={(e) => setFilters({...filters, dateTo: e.target.value})} className="px-3 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#0f1f3d]" title="Inscrit jusqu'au" />
+          <input type="date" value={filters.dateFrom} onChange={(e) => setFilters({...filters, dateFrom: e.target.value})} className="px-3 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#373b94]" title="Inscrit depuis" />
+          <input type="date" value={filters.dateTo} onChange={(e) => setFilters({...filters, dateTo: e.target.value})} className="px-3 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#373b94]" title="Inscrit jusqu'au" />
           <button onClick={() => setFilters({ search: "", postalCode: "", groupName: "", fundingType: "", dateFrom: "", dateTo: "" })} className="px-3 py-2 text-sm text-red-500 hover:text-red-700 transition">
             Reinitialiser
           </button>
@@ -242,7 +242,7 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
             <tbody className="divide-y divide-gray-100">
               {filtered.map((l) => (
                 <tr key={l.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-4 text-sm font-medium text-[#0f1f3d]">
+                  <td className="px-4 py-4 text-sm font-medium text-[#373b94]">
                     <a href={"/admin/learner/" + l.id} className="hover:underline">
                       {l.last_name} {l.first_name}
                     </a>
@@ -255,7 +255,7 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
                   <td className="px-4 py-4 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <div className="w-20 bg-gray-200 rounded-full h-2">
-                        <div className="bg-[#0f1f3d] h-2 rounded-full" style={{ width: l.pct + "%" }} />
+                        <div className="bg-[#373b94] h-2 rounded-full" style={{ width: l.pct + "%" }} />
                       </div>
                       <span className="text-xs text-gray-500">{l.completed}/{l.totalChapters}</span>
                     </div>
@@ -272,3 +272,4 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
     </div>
   );
 }
+

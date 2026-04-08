@@ -31,7 +31,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0f1f3d", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 16px", fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#373b94", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 16px", fontFamily: "'DM Sans', sans-serif" }}>
 
       {/* Logo */}
       <div style={{ marginBottom: 40, textAlign: "center" }}>
@@ -53,7 +53,7 @@ export default function ResetPasswordPage() {
         {sent ? (
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>✉️</div>
-            <h2 style={{ fontSize: 22, fontWeight: 700, color: "#0f1f3d", marginBottom: 12 }}>
+            <h2 style={{ fontSize: 22, fontWeight: 700, color: "#373b94", marginBottom: 12 }}>
               Email envoyé !
             </h2>
             <p style={{ color: "#6b7280", fontSize: 14, marginBottom: 8 }}>
@@ -65,14 +65,14 @@ export default function ResetPasswordPage() {
             </p>
             <a
               href="/login"
-              style={{ display: "inline-block", background: "#0f1f3d", color: "#fff", padding: "12px 28px", borderRadius: 10, textDecoration: "none", fontSize: 14, fontWeight: 600 }}
+              style={{ display: "inline-block", background: "#373b94", color: "#fff", padding: "12px 28px", borderRadius: 10, textDecoration: "none", fontSize: 14, fontWeight: 600 }}
             >
               Retour à la connexion
             </a>
           </div>
         ) : (
           <>
-            <h2 style={{ fontSize: 24, fontWeight: 700, color: "#0f1f3d", marginBottom: 8, textAlign: "center" }}>
+            <h2 style={{ fontSize: 24, fontWeight: 700, color: "#373b94", marginBottom: 8, textAlign: "center" }}>
               Mot de passe oublié ?
             </h2>
             <p style={{ color: "#6b7280", textAlign: "center", fontSize: 14, marginBottom: 32 }}>
@@ -105,14 +105,14 @@ export default function ResetPasswordPage() {
               <button
                 type="submit"
                 disabled={loading}
-                style={{ background: "#0f1f3d", color: "#fff", border: "none", borderRadius: 10, padding: "14px", fontSize: 15, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1 }}
+                style={{ background: "#373b94", color: "#fff", border: "none", borderRadius: 10, padding: "14px", fontSize: 15, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1 }}
               >
                 {loading ? "Envoi en cours..." : "Envoyer le lien"}
               </button>
             </form>
 
             <div style={{ marginTop: 24, textAlign: "center" }}>
-              <a href="/login" style={{ color: "#0f1f3d", fontSize: 14, textDecoration: "underline" }}>
+              <a href="/login" style={{ color: "#373b94", fontSize: 14, textDecoration: "underline" }}>
                 Retour à la connexion
               </a>
             </div>
@@ -130,3 +130,4 @@ export default function ResetPasswordPage() {
     </div>
   );
 }
+

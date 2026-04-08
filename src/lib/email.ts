@@ -10,7 +10,7 @@ const FOOTER = `
 `;
 
 function emailHeader(): string {
-  return `<div style="background-color: #0f1f3d; padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
+  return `<div style="background-color: #373b94; padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
     <h1 style="color: white; margin: 0; font-size: 26px; font-weight: bold; letter-spacing: 1px;">ELU FORMATION</h1>
   </div>`;
 }
@@ -42,7 +42,7 @@ export async function sendWelcomeEmail(
             Lors de votre premiere connexion, vous serez invite a choisir un nouveau mot de passe.
           </p>
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${appUrl}/login" style="background-color: #0f1f3d; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; display: inline-block;">
+            <a href="${appUrl}/login" style="background-color: #373b94; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; display: inline-block;">
               Acceder a ma formation
             </a>
           </div>
@@ -78,7 +78,7 @@ export async function sendPasswordResetEmail(
             Vous avez demande la reinitialisation de votre mot de passe. Cliquez sur le bouton ci-dessous pour en choisir un nouveau :
           </p>
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${resetLink}" style="background-color: #0f1f3d; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; display: inline-block;">
+            <a href="${resetLink}" style="background-color: #373b94; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; display: inline-block;">
               Reinitialiser mon mot de passe
             </a>
           </div>
@@ -98,3 +98,4 @@ export async function sendPasswordResetEmail(
   console.log("[EMAIL] Reset envoye a", to);
   return true;
 }
+

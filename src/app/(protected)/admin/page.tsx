@@ -80,7 +80,7 @@ export default async function AdminPage() {
       {/* Header */}
       <header
         style={{
-          background: "#0f1f3d",
+          background: "#373b94",
           padding: "14px 24px",
           display: "grid",
           gridTemplateColumns: "1fr auto 1fr",
@@ -150,19 +150,19 @@ export default async function AdminPage() {
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-xl p-5 shadow-sm text-center">
-            <p className="text-3xl font-bold text-[#0f1f3d]">{totalLearners}</p>
+            <p className="text-3xl font-bold text-[#373b94]">{totalLearners}</p>
             <p className="text-sm text-gray-500">Apprenants inscrits</p>
           </div>
           <div className="bg-white rounded-xl p-5 shadow-sm text-center">
-            <p className="text-3xl font-bold text-[#0f1f3d]">{activeLearners}</p>
+            <p className="text-3xl font-bold text-[#373b94]">{activeLearners}</p>
             <p className="text-sm text-gray-500">Apprenants actifs</p>
           </div>
           <div className="bg-white rounded-xl p-5 shadow-sm text-center">
-            <p className="text-3xl font-bold text-[#0f1f3d]">{avgCompletion}%</p>
+            <p className="text-3xl font-bold text-[#373b94]">{avgCompletion}%</p>
             <p className="text-sm text-gray-500">Complétion moyenne</p>
           </div>
           <div className="bg-white rounded-xl p-5 shadow-sm text-center">
-            <p className="text-3xl font-bold text-[#0f1f3d]">{totalChapters}</p>
+            <p className="text-3xl font-bold text-[#373b94]">{totalChapters}</p>
             <p className="text-sm text-gray-500">Chapitres</p>
           </div>
         </div>
@@ -177,3 +177,4 @@ export default async function AdminPage() {
     </div>
   );
 }
+

@@ -44,7 +44,7 @@ export default async function FormationPage() {
       {/* Header */}
       <header
         style={{
-          background: "#0f1f3d",
+          background: "#373b94",
           padding: "16px 24px",
           display: "grid",
           gridTemplateColumns: "1fr auto 1fr",
@@ -113,33 +113,33 @@ export default async function FormationPage() {
             <circle cx="36" cy="36" r="28" fill="none" stroke="#e8e5de" strokeWidth="6" />
             <circle
               cx="36" cy="36" r="28" fill="none"
-              stroke="#0f1f3d" strokeWidth="6"
+              stroke="#373b94" strokeWidth="6"
               strokeDasharray={circumference}
               strokeDashoffset={strokeDashoffset}
               strokeLinecap="round"
               transform="rotate(-90 36 36)"
               style={{ transition: "stroke-dashoffset 0.8s ease" }}
             />
-            <text x="36" y="41" textAnchor="middle" fontFamily="DM Sans, sans-serif" fontSize="14" fontWeight="500" fill="#0f1f3d">
+            <text x="36" y="41" textAnchor="middle" fontFamily="DM Sans, sans-serif" fontSize="14" fontWeight="500" fill="#373b94">
               {pct}%
             </text>
           </svg>
 
           <div className="flex-1">
-            <h2 className="font-semibold mb-1" style={{ fontSize: 20, color: "#0f1f3d" }}>
+            <h2 className="font-semibold mb-1" style={{ fontSize: 20, color: "#373b94" }}>
               Votre avancement
             </h2>
             <p className="text-sm mb-3" style={{ color: "#6b7280" }}>
               {completed} chapitre{completed > 1 ? "s" : ""} terminé{completed > 1 ? "s" : ""} sur {total}
             </p>
             <div className="w-full rounded-full" style={{ background: "#e8e5de", height: 8 }}>
-              <div className="rounded-full" style={{ background: "#0f1f3d", height: 8, width: `${pct}%`, transition: "width 0.8s ease" }} />
+              <div className="rounded-full" style={{ background: "#373b94", height: 8, width: `${pct}%`, transition: "width 0.8s ease" }} />
             </div>
             {next && (
               <a
                 href={`/formation/${next.id}`}
                 className="inline-flex items-center gap-2 mt-4 font-medium text-sm text-white"
-                style={{ background: "#0f1f3d", padding: "11px 22px", borderRadius: 10, textDecoration: "none" }}
+                style={{ background: "#373b94", padding: "11px 22px", borderRadius: 10, textDecoration: "none" }}
               >
                 {completed > 0 ? "Continuer la formation" : "Commencer la formation"}
                 <span>→</span>
@@ -148,7 +148,7 @@ export default async function FormationPage() {
           </div>
         </div>
 
-        <h3 className="font-semibold mb-6" style={{ fontSize: 16, color: "#0f1f3d" }}>
+        <h3 className="font-semibold mb-6" style={{ fontSize: 16, color: "#373b94" }}>
           Votre parcours de formation
         </h3>
         <ChapterList chapters={chaptersWithProgress} />
@@ -160,3 +160,4 @@ export default async function FormationPage() {
     </div>
   );
 }
+

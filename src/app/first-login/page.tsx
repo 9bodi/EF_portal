@@ -44,7 +44,7 @@ export default function FirstLoginPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0f1f3d", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 16px", fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#373b94", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 16px", fontFamily: "'DM Sans', sans-serif" }}>
 
       {/* Logo */}
       <div style={{ marginBottom: 40, textAlign: "center" }}>
@@ -63,7 +63,7 @@ export default function FirstLoginPage() {
 
       {/* Card */}
       <div style={{ background: "#fff", borderRadius: 20, boxShadow: "0 20px 60px rgba(0,0,0,0.3)", padding: "40px 40px", width: "100%", maxWidth: 420 }}>
-        <h2 style={{ fontSize: 24, fontWeight: 700, color: "#0f1f3d", marginBottom: 8, textAlign: "center" }}>
+        <h2 style={{ fontSize: 24, fontWeight: 700, color: "#373b94", marginBottom: 8, textAlign: "center" }}>
           Créez votre mot de passe
         </h2>
         <p style={{ color: "#6b7280", textAlign: "center", fontSize: 14, marginBottom: 32 }}>
@@ -112,7 +112,7 @@ export default function FirstLoginPage() {
           <button
             type="submit"
             disabled={loading}
-            style={{ background: "#0f1f3d", color: "#fff", border: "none", borderRadius: 10, padding: "14px", fontSize: 15, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1, marginTop: 4 }}
+            style={{ background: "#373b94", color: "#fff", border: "none", borderRadius: 10, padding: "14px", fontSize: 15, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1, marginTop: 4 }}
           >
             {loading ? "En cours..." : "Commencer ma formation"}
           </button>
@@ -129,3 +129,4 @@ export default function FirstLoginPage() {
     </div>
   );
 }
+
