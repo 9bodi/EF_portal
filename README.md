@@ -106,7 +106,11 @@ learner — accès à la formation uniquement
 Déploiement
 Recommandé : VPS (Hetzner, OVH, Scaleway) pour gérer les ~1 GB de packages SCORM avec bande passante illimitée.
 
-Copynpm run build
+##Copy
+
+npm run build
 npm run start
+
+##
 Licence
 Projet privé — © Élu Formation. Tous droits réservés.
