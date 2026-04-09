@@ -1,4 +1,5 @@
-﻿import { Resend } from "resend";
+﻿@'
+import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -23,7 +24,7 @@ export async function sendWelcomeEmail(
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
   const { error } = await resend.emails.send({
-    from: "Elu Formation <onboarding@resend.dev>",
+    from: "Elu Formation <noreply@eluformation.fr>",
     to,
     subject: "Bienvenue sur Elu Formation - Vos identifiants",
     html: `
@@ -66,7 +67,7 @@ export async function sendPasswordResetEmail(
   resetLink: string
 ) {
   const { error } = await resend.emails.send({
-    from: "Elu Formation <onboarding@resend.dev>",
+    from: "Elu Formation <noreply@eluformation.fr>",
     to,
     subject: "Elu Formation - Reinitialisation de votre mot de passe",
     html: `
@@ -98,4 +99,4 @@ export async function sendPasswordResetEmail(
   console.log("[EMAIL] Reset envoye a", to);
   return true;
 }
-
+'@ | Out-File -Encoding utf8 -LiteralPath "src/lib/email.ts"
