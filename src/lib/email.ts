@@ -1,5 +1,4 @@
-﻿@'
-import { Resend } from "resend";
+﻿import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -99,4 +98,3 @@ export async function sendPasswordResetEmail(
   console.log("[EMAIL] Reset envoye a", to);
   return true;
 }
-'@ | Out-File -Encoding utf8 -LiteralPath "src/lib/email.ts"
