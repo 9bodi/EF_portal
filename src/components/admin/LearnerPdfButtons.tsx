@@ -38,8 +38,8 @@ function formatTime(t: string | null): string {
   if (!t) return "-";
   const match = t.match(/(\d+):(\d+):(\d+)/);
   if (!match) return "-";
-  const h = parseInt(match[1]);
-  const m = parseInt(match[2]);
+  const h = parseInt(match[1], 10);
+  const m = parseInt(match[2], 10);
   if (h > 0) return h + "h" + String(m).padStart(2, "0");
   return m + "min";
 }
@@ -60,7 +60,15 @@ async function loadLogoBase64(): Promise<string> {
   });
 }
 
-export default function LearnerPdfButtons({ learner, chapters, pct, completed, total, totalTimeStr, avgScore }: Props) {
+export default function LearnerPdfButtons({
+  learner,
+  chapters,
+  pct,
+  completed,
+  total,
+  totalTimeStr,
+  avgScore,
+}: Props) {
   const [loadingExport, setLoadingExport] = useState(false);
   const [loadingSuccess, setLoadingSuccess] = useState(false);
   const [loadingCompletion, setLoadingCompletion] = useState(false);
@@ -70,19 +78,14 @@ export default function LearnerPdfButtons({ learner, chapters, pct, completed, t
   const canCertificateSuccess = avgScore !== null && avgScore >= 60 && allCompleted;
   const canCertificateCompletion = allCompleted;
 
-  // ────────────────────────────────────────
-  // 1) Export détail apprenant
-  // ────────────────────────────────────────
   async function handleExportDetail() {
     setLoadingExport(true);
     try {
-      const jsPDFModule = await import("jspdf");
+      const { jsPDF } = await import("jspdf");
       const autoTable = (await import("jspdf-autotable")).default;
-      const jsPDF = jsPDFModule.default || jsPDFModule.jsPDF;
       const logo = await loadLogoBase64();
       const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
-      // Header
       doc.setFillColor(55, 59, 148);
       doc.rect(0, 0, 210, 36, "F");
       doc.addImage(logo, "PNG", 14, 10, 55, 14);
@@ -90,7 +93,6 @@ export default function LearnerPdfButtons({ learner, chapters, pct, completed, t
       doc.setFontSize(11);
       doc.text("Fiche apprenant", 210 - 14, 22, { align: "right" });
 
-      // Learner info
       let y = 46;
       doc.setTextColor(55, 59, 148);
       doc.setFontSize(16);
@@ -104,17 +106,25 @@ export default function LearnerPdfButtons({ learner, chapters, pct, completed, t
       const infoLines = [
         `Email : ${learner.email}`,
         `Téléphone : ${learner.phone || "-"}`,
-        `Commune : ${learner.commune || "-"}${learner.postal_code ? " (" + learner.postal_code + ")" : ""}`,
-        `Financement : ${learner.funding_type === "dif" ? "DIF élu" : learner.funding_type === "cohort" ? "Cohorte" : "-"}`,
+        `Commune : ${learner.commune || "-"}${
+          learner.postal_code ? " (" + learner.postal_code + ")" : ""
+        }`,
+        `Financement : ${
+          learner.funding_type === "dif"
+            ? "DIF élu"
+            : learner.funding_type === "cohort"
+            ? "Cohorte"
+            : "-"
+        }`,
         `Groupe : ${learner.group_name || "-"}`,
         `Inscrit le : ${new Date(learner.created_at).toLocaleDateString("fr-FR")}`,
       ];
+
       infoLines.forEach((line) => {
         doc.text(line, 14, y);
         y += 5;
       });
 
-      // Stats
       y += 6;
       doc.setFillColor(245, 243, 239);
       doc.roundedRect(14, y, 182, 18, 3, 3, "F");
@@ -128,7 +138,6 @@ export default function LearnerPdfButtons({ learner, chapters, pct, completed, t
       doc.text(`Score : ${avgScore !== null ? avgScore + "%" : "-"}`, 162, statsY);
       y += 26;
 
-      // Chapters table
       doc.setTextColor(55, 59, 148);
       doc.setFontSize(13);
       doc.setFont("helvetica", "bold");
@@ -163,7 +172,6 @@ export default function LearnerPdfButtons({ learner, chapters, pct, completed, t
         margin: { left: 14, right: 14 },
       });
 
-      // Footer
       const pageHeight = doc.internal.pageSize.getHeight();
       doc.setFontSize(8);
       doc.setTextColor(160, 160, 160);
@@ -182,41 +190,32 @@ export default function LearnerPdfButtons({ learner, chapters, pct, completed, t
     setLoadingExport(false);
   }
 
-  // ────────────────────────────────────────
-  // 2) Certificat de réussite (≥60%)
-  // ────────────────────────────────────────
   async function handleCertificateSuccess() {
     setLoadingSuccess(true);
     try {
-      const jsPDFModule = await import("jspdf");
-      const jsPDF = jsPDFModule.default || jsPDFModule.jsPDF;
+      const { jsPDF } = await import("jspdf");
       const logo = await loadLogoBase64();
       const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
       const w = 297;
       const h = 210;
 
-      // Border
       doc.setDrawColor(55, 59, 148);
       doc.setLineWidth(1.5);
       doc.rect(10, 10, w - 20, h - 20);
       doc.setLineWidth(0.5);
       doc.rect(13, 13, w - 26, h - 26);
 
-      // Logo
       doc.addImage(logo, "PNG", (w - 70) / 2, 20, 70, 18);
 
-      // Title
       doc.setFontSize(28);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(55, 59, 148);
       doc.text("CERTIFICAT DE RÉUSSITE", w / 2, 62, { align: "center" });
 
-      // Decorative line
       doc.setDrawColor(55, 59, 148);
       doc.setLineWidth(0.8);
       doc.line(w / 2 - 40, 67, w / 2 + 40, 67);
 
-      // Body
       doc.setFontSize(13);
       doc.setFont("helvetica", "normal");
       doc.setTextColor(60, 60, 60);
@@ -235,20 +234,30 @@ export default function LearnerPdfButtons({ learner, chapters, pct, completed, t
       doc.setFontSize(16);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(55, 59, 148);
-      doc.text("Élu Formation — Communication politique et publique", w / 2, 120, { align: "center" });
+      doc.text(
+        "Élu Formation — Communication politique et publique",
+        w / 2,
+        120,
+        { align: "center" }
+      );
 
       doc.setFontSize(13);
       doc.setFont("helvetica", "normal");
       doc.setTextColor(60, 60, 60);
       doc.text(`avec une moyenne générale de ${avgScore}%`, w / 2, 134, { align: "center" });
-      doc.text(`Modules complétés : ${completed}/${total}  —  Temps total : ${totalTimeStr}`, w / 2, 143, { align: "center" });
+      doc.text(
+        `Modules complétés : ${completed}/${total}  —  Temps total : ${totalTimeStr}`,
+        w / 2,
+        143,
+        { align: "center" }
+      );
 
-      // Date
       doc.setFontSize(11);
       doc.setTextColor(120, 120, 120);
-      doc.text(`Délivré le ${new Date().toLocaleDateString("fr-FR")}`, w / 2, 160, { align: "center" });
+      doc.text(`Délivré le ${new Date().toLocaleDateString("fr-FR")}`, w / 2, 160, {
+        align: "center",
+      });
 
-      // Signature line
       doc.setDrawColor(180, 180, 180);
       doc.setLineWidth(0.3);
       doc.line(w / 2 - 30, 178, w / 2 + 30, 178);
@@ -264,41 +273,32 @@ export default function LearnerPdfButtons({ learner, chapters, pct, completed, t
     setLoadingSuccess(false);
   }
 
-  // ────────────────────────────────────────
-  // 3) Certificat de complétion
-  // ────────────────────────────────────────
   async function handleCertificateCompletion() {
     setLoadingCompletion(true);
     try {
-      const jsPDFModule = await import("jspdf");
-      const jsPDF = jsPDFModule.default || jsPDFModule.jsPDF;
+      const { jsPDF } = await import("jspdf");
       const logo = await loadLogoBase64();
       const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
       const w = 297;
       const h = 210;
 
-      // Border
       doc.setDrawColor(34, 197, 94);
       doc.setLineWidth(1.5);
       doc.rect(10, 10, w - 20, h - 20);
       doc.setLineWidth(0.5);
       doc.rect(13, 13, w - 26, h - 26);
 
-      // Logo
       doc.addImage(logo, "PNG", (w - 70) / 2, 20, 70, 18);
 
-      // Title
       doc.setFontSize(28);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(34, 197, 94);
       doc.text("CERTIFICAT DE COMPLÉTION", w / 2, 62, { align: "center" });
 
-      // Decorative line
       doc.setDrawColor(34, 197, 94);
       doc.setLineWidth(0.8);
       doc.line(w / 2 - 40, 67, w / 2 + 40, 67);
 
-      // Body
       doc.setFontSize(13);
       doc.setFont("helvetica", "normal");
       doc.setTextColor(60, 60, 60);
@@ -317,22 +317,30 @@ export default function LearnerPdfButtons({ learner, chapters, pct, completed, t
       doc.setFontSize(16);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(55, 59, 148);
-      doc.text("Élu Formation — Communication politique et publique", w / 2, 120, { align: "center" });
+      doc.text(
+        "Élu Formation — Communication politique et publique",
+        w / 2,
+        120,
+        { align: "center" }
+      );
 
       doc.setFontSize(13);
       doc.setFont("helvetica", "normal");
       doc.setTextColor(60, 60, 60);
-      doc.text(`${total} modules complétés  —  Temps total : ${totalTimeStr}`, w / 2, 138, { align: "center" });
+      doc.text(`${total} modules complétés  —  Temps total : ${totalTimeStr}`, w / 2, 138, {
+        align: "center",
+      });
+
       if (avgScore !== null) {
         doc.text(`Score moyen : ${avgScore}%`, w / 2, 147, { align: "center" });
       }
 
-      // Date
       doc.setFontSize(11);
       doc.setTextColor(120, 120, 120);
-      doc.text(`Délivré le ${new Date().toLocaleDateString("fr-FR")}`, w / 2, 164, { align: "center" });
+      doc.text(`Délivré le ${new Date().toLocaleDateString("fr-FR")}`, w / 2, 164, {
+        align: "center",
+      });
 
-      // Signature line
       doc.setDrawColor(180, 180, 180);
       doc.setLineWidth(0.3);
       doc.line(w / 2 - 30, 178, w / 2 + 30, 178);
@@ -348,9 +356,6 @@ export default function LearnerPdfButtons({ learner, chapters, pct, completed, t
     setLoadingCompletion(false);
   }
 
-  // ────────────────────────────────────────
-  // Render
-  // ────────────────────────────────────────
   const btnBase: React.CSSProperties = {
     padding: "10px 18px",
     borderRadius: 10,
@@ -366,7 +371,12 @@ export default function LearnerPdfButtons({ learner, chapters, pct, completed, t
       <button
         onClick={handleExportDetail}
         disabled={loadingExport}
-        style={{ ...btnBase, background: "#373b94", color: "#fff", opacity: loadingExport ? 0.6 : 1 }}
+        style={{
+          ...btnBase,
+          background: "#373b94",
+          color: "#fff",
+          opacity: loadingExport ? 0.6 : 1,
+        }}
       >
         {loadingExport ? "Génération..." : "📄 Exporter la fiche PDF"}
       </button>
@@ -374,7 +384,11 @@ export default function LearnerPdfButtons({ learner, chapters, pct, completed, t
       <button
         onClick={handleCertificateSuccess}
         disabled={!canCertificateSuccess || loadingSuccess}
-        title={!canCertificateSuccess ? "Requiert tous les modules terminés avec une moyenne ≥ 60%" : ""}
+        title={
+          !canCertificateSuccess
+            ? "Requiert tous les modules terminés avec une moyenne ≥ 60%"
+            : ""
+        }
         style={{
           ...btnBase,
           background: canCertificateSuccess ? "#373b94" : "#e5e7eb",
