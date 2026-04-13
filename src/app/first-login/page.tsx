@@ -8,6 +8,7 @@ import Image from "next/image";
 export default function FirstLoginPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [cguAccepted, setCguAccepted] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -23,6 +24,10 @@ export default function FirstLoginPage() {
     }
     if (password !== confirmPassword) {
       setError("Les mots de passe ne correspondent pas.");
+      return;
+    }
+    if (!cguAccepted) {
+      setError("Vous devez accepter les conditions générales d'utilisation.");
       return;
     }
 
@@ -46,7 +51,6 @@ export default function FirstLoginPage() {
   return (
     <div style={{ minHeight: "100vh", background: "#373b94", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 16px", fontFamily: "'DM Sans', sans-serif" }}>
 
-      {/* Logo */}
       <div style={{ marginBottom: 40, textAlign: "center" }}>
         <Image
           src="/img/LOGO_ELU-FORMATION_BLANC100.png"
@@ -61,7 +65,6 @@ export default function FirstLoginPage() {
         </p>
       </div>
 
-      {/* Card */}
       <div style={{ background: "#fff", borderRadius: 20, boxShadow: "0 20px 60px rgba(0,0,0,0.3)", padding: "40px 40px", width: "100%", maxWidth: 420 }}>
         <h2 style={{ fontSize: 24, fontWeight: 700, color: "#373b94", marginBottom: 8, textAlign: "center" }}>
           Créez votre mot de passe
@@ -103,6 +106,26 @@ export default function FirstLoginPage() {
             />
           </div>
 
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+            <input
+              id="cgu"
+              type="checkbox"
+              checked={cguAccepted}
+              onChange={(e) => setCguAccepted(e.target.checked)}
+              style={{ marginTop: 3, width: 18, height: 18, accentColor: "#373b94", cursor: "pointer", flexShrink: 0 }}
+            />
+            <label htmlFor="cgu" style={{ fontSize: 13, color: "#4b5563", lineHeight: 1.5, cursor: "pointer" }}>
+              J&apos;accepte les{" "}
+              <a href="/cgu" target="_blank" style={{ color: "#373b94", textDecoration: "underline", fontWeight: 500 }}>
+                conditions générales d&apos;utilisation
+              </a>
+              {" "}et la{" "}
+              <a href="/confidentialite" target="_blank" style={{ color: "#373b94", textDecoration: "underline", fontWeight: 500 }}>
+                politique de confidentialité
+              </a>
+            </label>
+          </div>
+
           {error && (
             <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626", padding: "12px 16px", borderRadius: 10, fontSize: 14 }}>
               {error}
@@ -111,15 +134,14 @@ export default function FirstLoginPage() {
 
           <button
             type="submit"
-            disabled={loading}
-            style={{ background: "#373b94", color: "#fff", border: "none", borderRadius: 10, padding: "14px", fontSize: 15, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1, marginTop: 4 }}
+            disabled={loading || !cguAccepted}
+            style={{ background: "#373b94", color: "#fff", border: "none", borderRadius: 10, padding: "14px", fontSize: 15, fontWeight: 600, cursor: (loading || !cguAccepted) ? "not-allowed" : "pointer", opacity: (loading || !cguAccepted) ? 0.6 : 1, marginTop: 4 }}
           >
             {loading ? "En cours..." : "Commencer ma formation"}
           </button>
         </form>
       </div>
 
-      {/* Footer */}
       <div style={{ marginTop: 32, textAlign: "center", color: "rgba(255,255,255,0.45)", fontSize: 13 }}>
         <p>Besoin d&apos;aide ? Contactez-nous</p>
         <p style={{ marginTop: 4, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>
@@ -129,4 +151,3 @@ export default function FirstLoginPage() {
     </div>
   );
 }
-

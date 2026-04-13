@@ -131,6 +131,11 @@ export default function LoginPage() {
         <p style={{ marginTop: 4, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>
           contact@eluformation.fr
         </p>
+        <div style={{ marginTop: 16, display: "flex", justifyContent: "center", gap: 16 }}>
+          <a href="/mentions-legales" style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, textDecoration: "underline" }}>Mentions legales</a>
+          <a href="/cgu" style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, textDecoration: "underline" }}>CGU</a>
+          <a href="/confidentialite" style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, textDecoration: "underline" }}>Confidentialite</a>
+        </div>
       </div>
     </div>
   );

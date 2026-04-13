@@ -1,7 +1,9 @@
 ﻿import { createClient } from "@/lib/supabase/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
+import Image from "next/image";
 import UnlockButton from "@/components/admin/UnlockButton";
+import LearnerPdfButtons from "@/components/admin/LearnerPdfButtons";
 
 function getAdminClient() {
   return createSupabaseClient(
@@ -33,7 +35,7 @@ export default async function LearnerDetailPage({ params }: PageProps) {
 
   const admin = getAdminClient();
 
-  const { data: profile } = await admin.from("users").select("role").eq("id", user.id).single();
+  const { data: profile } = await admin.from("users").select("*").eq("id", user.id).single();
   if (!profile || profile.role !== "admin") redirect("/formation");
 
   const { data: learner } = await admin.from("users").select("*").eq("id", learnerId).single();
@@ -73,62 +75,168 @@ export default async function LearnerDetailPage({ params }: PageProps) {
     ? Math.round(scored.reduce((a: number, c: any) => a + c.score, 0) / scored.length)
     : null;
 
+  // Serializable data for the client component
+  const learnerData = {
+    first_name: learner.first_name,
+    last_name: learner.last_name,
+    email: learner.email,
+    phone: learner.phone || "",
+    commune: learner.commune || "",
+    postal_code: learner.postal_code || "",
+    funding_type: learner.funding_type || "",
+    group_name: learner.group_name || "",
+    created_at: learner.created_at,
+  };
+
+  const chaptersData = chaptersWithProgress.map((ch: any) => ({
+    order: ch.order,
+    title: ch.title,
+    status: ch.status,
+    total_time: ch.total_time,
+    score: ch.score,
+    completed_at: ch.completed_at,
+    last_accessed_at: ch.last_accessed_at,
+  }));
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-[#0f1f3d] text-white px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <a href="/admin" className="text-sm text-gray-300 hover:text-white transition">← Retour</a>
-          <h1 className="text-xl font-bold">Detail apprenant</h1>
+    <div className="min-h-screen" style={{ background: "#f5f3ef", fontFamily: "'DM Sans', sans-serif" }}>
+
+      <header
+        style={{
+          background: "#373b94",
+          padding: "14px 24px",
+          display: "grid",
+          gridTemplateColumns: "1fr auto 1fr",
+          alignItems: "center",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <Image
+            src="/img/LOGO_ELU-FORMATION_BLANC100.png"
+            alt="Élu Formation"
+            width={160}
+            height={52}
+            style={{ objectFit: "contain", height: "auto" }}
+
+            priority
+          />
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <span
+            style={{
+              display: "inline-block",
+              background: "rgba(255,255,255,0.12)",
+              color: "#fff",
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: "0.1em",
+              padding: "3px 10px",
+              borderRadius: 99,
+              marginBottom: 4,
+            }}
+          >
+            ADMIN
+          </span>
+          <p style={{ color: "#fff", fontWeight: 600, fontSize: 14, margin: 0 }}>
+            {profile.first_name} {profile.last_name}
+          </p>
+        </div>
+        <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 16 }}>
+          <a
+            href="/admin"
+            style={{
+              color: "#fff",
+              background: "rgba(255,255,255,0.12)",
+              border: "1px solid rgba(255,255,255,0.25)",
+              borderRadius: 8,
+              padding: "7px 14px",
+              fontSize: 13,
+              fontWeight: 600,
+              textDecoration: "none",
+            }}
+          >
+            ← Retour
+          </a>
+          <form action="/api/auth/logout" method="POST">
+            <button
+              style={{
+                color: "#9aa5b8",
+                border: "1px solid rgba(255,255,255,0.15)",
+                borderRadius: 8,
+                padding: "7px 14px",
+                background: "transparent",
+                cursor: "pointer",
+                fontSize: 13,
+              }}
+            >
+              Déconnexion
+            </button>
+          </form>
         </div>
       </header>
 
       <main className="max-w-5xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl p-6 shadow-sm mb-6">
-          <h2 className="text-xl font-bold text-[#0f1f3d]">{learner.first_name} {learner.last_name}</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm text-gray-600">
-            <div><span className="text-gray-400">Email</span><br/>{learner.email}</div>
-            <div><span className="text-gray-400">Telephone</span><br/>{learner.phone || "-"}</div>
-            <div><span className="text-gray-400">Commune</span><br/>{learner.commune ? learner.commune + (learner.postal_code ? " (" + learner.postal_code + ")" : "") : learner.postal_code || "-"}</div>
-            <div><span className="text-gray-400">Financement</span><br/>{learner.funding_type === "dif" ? "DIF elu" : learner.funding_type === "cohort" ? "Cohorte" : "-"}</div>
-            <div><span className="text-gray-400">Groupe</span><br/>{learner.group_name || "-"}</div>
-            <div><span className="text-gray-400">Inscrit le</span><br/>{new Date(learner.created_at).toLocaleDateString("fr-FR")}</div>
-            <div><span className="text-gray-400">Derniere connexion</span><br/>{learner.last_login_at ? new Date(learner.last_login_at).toLocaleDateString("fr-FR") : "-"}</div>
+
+        {/* Learner info card */}
+        <div style={{ background: "#fff", borderRadius: 16, padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", marginBottom: 24, border: "1px solid rgba(55,59,148,0.08)" }}>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#373b94", marginBottom: 16 }}>{learner.first_name} {learner.last_name}</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm" style={{ color: "#4b5563" }}>
+            <div><span style={{ color: "#9ca3af" }}>Email</span><br/>{learner.email}</div>
+            <div><span style={{ color: "#9ca3af" }}>Téléphone</span><br/>{learner.phone || "-"}</div>
+            <div><span style={{ color: "#9ca3af" }}>Commune</span><br/>{learner.commune ? learner.commune + (learner.postal_code ? " (" + learner.postal_code + ")" : "") : learner.postal_code || "-"}</div>
+            <div><span style={{ color: "#9ca3af" }}>Financement</span><br/>{learner.funding_type === "dif" ? "DIF élu" : learner.funding_type === "cohort" ? "Cohorte" : "-"}</div>
+            <div><span style={{ color: "#9ca3af" }}>Groupe</span><br/>{learner.group_name || "-"}</div>
+            <div><span style={{ color: "#9ca3af" }}>Inscrit le</span><br/>{new Date(learner.created_at).toLocaleDateString("fr-FR")}</div>
+            <div><span style={{ color: "#9ca3af" }}>Dernière connexion</span><br/>{learner.last_login_at ? new Date(learner.last_login_at).toLocaleDateString("fr-FR") : "-"}</div>
           </div>
         </div>
 
+        {/* Stat cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-xl p-5 shadow-sm text-center">
-            <p className="text-3xl font-bold text-[#0f1f3d]">{pct}%</p>
-            <p className="text-sm text-gray-500">Completion</p>
+          <div style={{ background: "#fff", borderRadius: 16, padding: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", textAlign: "center", border: "1px solid rgba(55,59,148,0.08)" }}>
+            <p style={{ fontSize: 28, fontWeight: 700, color: "#373b94" }}>{pct}%</p>
+            <p style={{ fontSize: 13, color: "#6b7280" }}>Complétion</p>
           </div>
-          <div className="bg-white rounded-xl p-5 shadow-sm text-center">
-            <p className="text-3xl font-bold text-[#0f1f3d]">{completed}/{total}</p>
-            <p className="text-sm text-gray-500">Chapitres termines</p>
+          <div style={{ background: "#fff", borderRadius: 16, padding: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", textAlign: "center", border: "1px solid rgba(55,59,148,0.08)" }}>
+            <p style={{ fontSize: 28, fontWeight: 700, color: "#373b94" }}>{completed}/{total}</p>
+            <p style={{ fontSize: 13, color: "#6b7280" }}>Chapitres terminés</p>
           </div>
-          <div className="bg-white rounded-xl p-5 shadow-sm text-center">
-            <p className="text-3xl font-bold text-[#0f1f3d]">{totalTimeStr}</p>
-            <p className="text-sm text-gray-500">Temps total</p>
+          <div style={{ background: "#fff", borderRadius: 16, padding: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", textAlign: "center", border: "1px solid rgba(55,59,148,0.08)" }}>
+            <p style={{ fontSize: 28, fontWeight: 700, color: "#373b94" }}>{totalTimeStr}</p>
+            <p style={{ fontSize: 13, color: "#6b7280" }}>Temps total</p>
           </div>
-          <div className="bg-white rounded-xl p-5 shadow-sm text-center">
-            <p className="text-3xl font-bold text-[#0f1f3d]">{avgScore !== null ? avgScore + "%" : "-"}</p>
-            <p className="text-sm text-gray-500">Score moyen</p>
+          <div style={{ background: "#fff", borderRadius: 16, padding: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", textAlign: "center", border: "1px solid rgba(55,59,148,0.08)" }}>
+            <p style={{ fontSize: 28, fontWeight: 700, color: "#373b94" }}>{avgScore !== null ? avgScore + "%" : "-"}</p>
+            <p style={{ fontSize: 13, color: "#6b7280" }}>Score moyen</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b">
-            <h3 className="text-lg font-bold text-[#0f1f3d]">Detail par chapitre</h3>
+        {/* PDF buttons */}
+        <LearnerPdfButtons
+          learner={learnerData}
+          chapters={chaptersData}
+          pct={pct}
+          completed={completed}
+          total={total}
+          totalTimeStr={totalTimeStr}
+          avgScore={avgScore}
+        />
+
+        {/* Chapters table */}
+        <div style={{ background: "#fff", borderRadius: 16, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", overflow: "hidden", border: "1px solid rgba(55,59,148,0.08)" }}>
+          <div style={{ padding: "16px 24px", borderBottom: "1px solid #e5e7eb" }}>
+            <h3 style={{ fontSize: 17, fontWeight: 700, color: "#373b94" }}>Détail par chapitre</h3>
           </div>
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead style={{ background: "#f9fafb" }}>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Chapitre</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Statut</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Temps</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Score</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Termine le</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Dernier acces</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Action</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Chapitre</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Statut</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Temps</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Score</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Terminé le</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Dernier accès</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -137,22 +245,23 @@ export default async function LearnerDetailPage({ params }: PageProps) {
                 const isStarted = ch.status === "incomplete";
                 return (
                   <tr key={ch.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-[#0f1f3d]">
-                      <span className="text-gray-400 mr-2">{ch.order}</span>{ch.title}
+                    <td className="px-4 py-4 text-sm" style={{ color: "#373b94" }}>
+                      <span style={{ color: "#9ca3af", marginRight: 8 }}>{ch.order}</span>{ch.title}
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      {isCompleted && <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">Termine</span>}
+                    <td className="px-4 py-4 text-center">
+                      {isCompleted && <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">Terminé</span>}
                       {isStarted && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full font-medium">En cours</span>}
-                      {!isCompleted && !isStarted && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-full font-medium">Non commence</span>}
+                      {!isCompleted && !isStarted && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-full font-medium">Non commencé</span>}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500 text-center">{formatTime(ch.total_time)}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500 text-center">{ch.score !== null ? ch.score + "%" : "-"}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500 text-center">{ch.completed_at ? new Date(ch.completed_at).toLocaleDateString("fr-FR") : "-"}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500 text-center">{ch.last_accessed_at ? new Date(ch.last_accessed_at).toLocaleDateString("fr-FR") : "-"}</td>
-                    <td className="px-6 py-4 text-center">
-                      {!isCompleted && (
-                        <UnlockButton learnerId={learnerId} chapterId={ch.id} />
-                      )}
+                    <td className="px-4 py-4 text-sm text-gray-500 text-center">{formatTime(ch.total_time)}</td>
+                    <td className="px-4 py-4 text-sm text-gray-500 text-center">{ch.score !== null ? ch.score + "%" : "-"}</td>
+                    <td className="px-4 py-4 text-sm text-gray-500 text-center">{ch.completed_at ? new Date(ch.completed_at).toLocaleDateString("fr-FR") : "-"}</td>
+                    <td className="px-4 py-4 text-sm text-gray-500 text-center">{ch.last_accessed_at ? new Date(ch.last_accessed_at).toLocaleDateString("fr-FR") : "-"}</td>
+                    <td className="px-4 py-4 text-center">
+                      {isCompleted
+                        ? <span style={{ color: "#22c55e", fontSize: 12 }}>✓</span>
+                        : <UnlockButton learnerId={learnerId} chapterId={ch.id} chapterTitle={ch.title} />
+                      }
                     </td>
                   </tr>
                 );
@@ -161,6 +270,10 @@ export default async function LearnerDetailPage({ params }: PageProps) {
           </table>
         </div>
       </main>
+
+      <footer style={{ textAlign: "center", padding: "24px", fontSize: 13, color: "#9ca3af" }}>
+        Support : contact@eluformation.fr
+      </footer>
     </div>
   );
 }

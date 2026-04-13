@@ -18,28 +18,35 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
   const path = request.nextUrl.pathname;
 
-  const publicPaths = ["/login", "/forgot-password", "/reset-password", "/api/auth"];
+  const publicPaths = ["/login", "/forgot-password", "/reset-password", "/api/auth", "/mentions-legales", "/cgu", "/confidentialite"];
   const isPublic = publicPaths.some((p) => path.startsWith(p));
 
-  if (!user && !isPublic && path !== "/") {
-    return NextResponse.redirect(new URL("/login", request.url));
+  if (isPublic || path === "/") {
+    return supabaseResponse;
   }
 
-  if (path.startsWith("/admin")) {
-    if (!user) return NextResponse.redirect(new URL("/login", request.url));
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
 
-    const { data: profile } = await supabase
-      .from("users")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile || profile.role !== "admin") {
-      return NextResponse.redirect(new URL("/formation", request.url));
+    if (!user) {
+      return NextResponse.redirect(new URL("/login", request.url));
     }
+
+    if (path.startsWith("/admin")) {
+      const { data: profile } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (!profile || profile.role !== "admin") {
+        return NextResponse.redirect(new URL("/formation", request.url));
+      }
+    }
+  } catch {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   return supabaseResponse;

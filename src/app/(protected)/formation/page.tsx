@@ -2,6 +2,7 @@
 import { redirect } from "next/navigation";
 import ChapterList from "@/components/formation/ChapterList";
 import Image from "next/image";
+import LearnerCertificates from "@/components/formation/LearnerCertificates";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,23 @@ export default async function FormationPage() {
   ).length;
   const total = chaptersWithProgress.length;
   const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  // Calculs pour les certificats
+  const totalSeconds = chaptersWithProgress.reduce((acc: number, c: any) => {
+    if (!c.progress?.total_time) return acc;
+    const match = c.progress.total_time.match(/(\d+):(\d+):(\d+)/);
+    if (!match) return acc;
+    return acc + parseInt(match[1]) * 3600 + parseInt(match[2]) * 60 + parseInt(match[3]);
+  }, 0);
+  const totalH = Math.floor(totalSeconds / 3600);
+  const totalM = Math.floor((totalSeconds % 3600) / 60);
+  const totalTimeStr = totalH > 0 ? totalH + "h" + String(totalM).padStart(2, "0") : totalM + "min";
+
+  const scored = chaptersWithProgress.filter((c: any) => c.progress?.score !== null && c.progress?.score !== undefined);
+  const avgScore = scored.length > 0
+    ? Math.round(scored.reduce((a: number, c: any) => a + c.progress.score, 0) / scored.length)
+    : null;
+
   const next = chaptersWithProgress.find(
     (c: any) => !c.progress || (c.progress.status !== "completed" && c.progress.status !== "passed")
   );
@@ -53,7 +71,6 @@ export default async function FormationPage() {
           overflow-x: hidden;
         }
 
-        /* ── HEADER ── */
         .ef-header {
           background: #373b94;
           padding: 0 32px;
@@ -119,7 +136,6 @@ export default async function FormationPage() {
           background: rgba(255,255,255,0.2);
         }
 
-        /* ── MAIN ── */
         .ef-main {
           max-width: 860px;
           width: 100%;
@@ -128,7 +144,6 @@ export default async function FormationPage() {
           overflow-x: hidden;
         }
 
-        /* ── HERO CARD ── */
         .ef-hero {
           background: #373b94;
           border-radius: 20px;
@@ -264,7 +279,6 @@ export default async function FormationPage() {
           transition: transform 0.2s ease;
         }
 
-        /* Circular ring */
         .ef-ring-wrap {
           position: relative;
           flex-shrink: 0;
@@ -294,7 +308,6 @@ export default async function FormationPage() {
           letter-spacing: 0.04em;
         }
 
-        /* ── SECTION HEADER ── */
         .ef-section-head {
           display: flex;
           align-items: baseline;
@@ -314,7 +327,6 @@ export default async function FormationPage() {
           font-weight: 500;
         }
 
-        /* ── FOOTER ── */
         .ef-footer {
           text-align: center;
           padding: 20px;
@@ -329,7 +341,6 @@ export default async function FormationPage() {
         }
         .ef-footer a:hover { text-decoration: underline; }
 
-        /* ── RESPONSIVE ── */
         @media (max-width: 640px) {
           .ef-header {
             padding: 0 16px;
@@ -361,7 +372,6 @@ export default async function FormationPage() {
             width: 100%;
             justify-content: center;
           }
-          /* Fix chapter cards overflow */
           .ef-main > * {
             max-width: 100%;
             overflow-x: hidden;
@@ -369,7 +379,6 @@ export default async function FormationPage() {
         }
       ` }} />
 
-      {/* ── HEADER ── */}
       <header className="ef-header">
         <div className="ef-header-logo">
           <Image
@@ -377,7 +386,7 @@ export default async function FormationPage() {
             alt="Élu Formation"
             width={160}
             height={52}
-            style={{ objectFit: "contain" }}
+            style={{ objectFit: "contain", height: "auto" }}
           />
         </div>
 
@@ -398,10 +407,8 @@ export default async function FormationPage() {
         </div>
       </header>
 
-      {/* ── MAIN ── */}
       <main className="ef-main">
 
-        {/* Hero progress card */}
         <div className="ef-hero">
           <div>
             <p className="ef-hero-label">Tableau de bord</p>
@@ -447,24 +454,14 @@ export default async function FormationPage() {
             )}
           </div>
 
-          {/* Ring */}
           <div className="ef-ring-wrap">
             <svg width="120" height="120" viewBox="0 0 72 72">
+              <circle cx="36" cy="36" r="28" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="5" />
               <circle
-                cx="36" cy="36" r="28"
-                fill="none"
-                stroke="rgba(255,255,255,0.1)"
-                strokeWidth="5"
-              />
-              <circle
-                cx="36" cy="36" r="28"
-                fill="none"
-                stroke="rgba(255,255,255,0.85)"
-                strokeWidth="5"
-                strokeDasharray={circumference}
-                strokeDashoffset={strokeDashoffset}
-                strokeLinecap="round"
-                transform="rotate(-90 36 36)"
+                cx="36" cy="36" r="28" fill="none"
+                stroke="rgba(255,255,255,0.85)" strokeWidth="5"
+                strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
+                strokeLinecap="round" transform="rotate(-90 36 36)"
                 style={{ transition: "stroke-dashoffset 0.9s cubic-bezier(0.4,0,0.2,1)" }}
               />
             </svg>
@@ -475,7 +472,16 @@ export default async function FormationPage() {
           </div>
         </div>
 
-        {/* Chapter list */}
+        {/* Certificats — apparaît uniquement si conditions remplies */}
+        <LearnerCertificates
+          firstName={profile.first_name}
+          lastName={profile.last_name}
+          completed={completed}
+          total={total}
+          totalTimeStr={totalTimeStr}
+          avgScore={avgScore}
+        />
+
         <div className="ef-section-head">
           <h2 className="ef-section-title">Votre parcours</h2>
           <span className="ef-section-count">{total} chapitre{total > 1 ? "s" : ""}</span>
