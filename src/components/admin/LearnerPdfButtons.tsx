@@ -81,7 +81,7 @@ export default function LearnerPdfButtons({
   async function handleExportDetail() {
     setLoadingExport(true);
     try {
-      const { jsPDF } = await import("jspdf");
+      const jsPDF = (await import("jspdf")).default;
       const autoTable = (await import("jspdf-autotable")).default;
       const logo = await loadLogoBase64();
       const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
@@ -113,8 +113,8 @@ export default function LearnerPdfButtons({
           learner.funding_type === "dif"
             ? "DIF élu"
             : learner.funding_type === "cohort"
-            ? "Cohorte"
-            : "-"
+              ? "Cohorte"
+              : "-"
         }`,
         `Groupe : ${learner.group_name || "-"}`,
         `Inscrit le : ${new Date(learner.created_at).toLocaleDateString("fr-FR")}`,
@@ -193,7 +193,7 @@ export default function LearnerPdfButtons({
   async function handleCertificateSuccess() {
     setLoadingSuccess(true);
     try {
-      const { jsPDF } = await import("jspdf");
+      const jsPDF = (await import("jspdf")).default;
       const logo = await loadLogoBase64();
       const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
       const w = 297;
@@ -276,7 +276,7 @@ export default function LearnerPdfButtons({
   async function handleCertificateCompletion() {
     setLoadingCompletion(true);
     try {
-      const { jsPDF } = await import("jspdf");
+      const jsPDF = (await import("jspdf")).default;
       const logo = await loadLogoBase64();
       const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
       const w = 297;
