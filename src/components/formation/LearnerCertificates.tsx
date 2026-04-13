@@ -35,8 +35,7 @@ export default function LearnerCertificates({ firstName, lastName, completed, to
   async function handleCertificateSuccess() {
     setLoadingSuccess(true);
     try {
-      const jsPDFModule = await import("jspdf");
-      const jsPDF = jsPDFModule.default || jsPDFModule.jsPDF;
+      const jsPDF = (await import("jspdf")).default;
       const logo = await loadLogoBase64();
       const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
       const w = 297;
@@ -106,8 +105,7 @@ export default function LearnerCertificates({ firstName, lastName, completed, to
   async function handleCertificateCompletion() {
     setLoadingCompletion(true);
     try {
-      const jsPDFModule = await import("jspdf");
-      const jsPDF = jsPDFModule.default || jsPDFModule.jsPDF;
+      const jsPDF = (await import("jspdf")).default;
       const logo = await loadLogoBase64();
       const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
       const w = 297;
