@@ -8,6 +8,8 @@ import Image from "next/image";
 export default function FirstLoginPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [cguAccepted, setCguAccepted] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -48,6 +50,31 @@ export default function FirstLoginPage() {
     router.push("/formation");
   }
 
+  const eyeBtn = (show: boolean, toggle: () => void) => (
+    <button
+      type="button"
+      onClick={toggle}
+      style={{
+        position: "absolute",
+        right: 12,
+        top: "50%",
+        transform: "translateY(-50%)",
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        fontSize: 18,
+        color: "#9ca3af",
+        padding: 4,
+        display: "flex",
+        alignItems: "center",
+      }}
+      tabIndex={-1}
+      aria-label={show ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+    >
+      {show ? "🙈" : "👁️"}
+    </button>
+  );
+
   return (
     <div style={{ minHeight: "100vh", background: "#373b94", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 16px", fontFamily: "'DM Sans', sans-serif" }}>
 
@@ -57,7 +84,7 @@ export default function FirstLoginPage() {
           alt="Élu Formation"
           width={220}
           height={72}
-          style={{ objectFit: "contain" }}
+          style={{ objectFit: "contain", height: "auto" }}
           priority
         />
         <p style={{ color: "rgba(255,255,255,0.55)", marginTop: 12, fontSize: 15 }}>
@@ -78,32 +105,38 @@ export default function FirstLoginPage() {
             <label htmlFor="password" style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#374151", marginBottom: 6 }}>
               Nouveau mot de passe
             </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{ width: "100%", padding: "12px 16px", fontSize: 15, border: "2px solid #e5e7eb", borderRadius: 10, outline: "none", boxSizing: "border-box", color: "#1f2937", backgroundColor: "#fff" }}
-              placeholder="Minimum 8 caractères"
-              required
-              autoComplete="new-password"
-            />
+            <div style={{ position: "relative" }}>
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{ width: "100%", padding: "12px 48px 12px 16px", fontSize: 15, border: "2px solid #e5e7eb", borderRadius: 10, outline: "none", boxSizing: "border-box", color: "#1f2937", backgroundColor: "#fff" }}
+                placeholder="Minimum 8 caractères"
+                required
+                autoComplete="new-password"
+              />
+              {eyeBtn(showPassword, () => setShowPassword(!showPassword))}
+            </div>
           </div>
 
           <div>
             <label htmlFor="confirmPassword" style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#374151", marginBottom: 6 }}>
               Confirmer le mot de passe
             </label>
-            <input
-              id="confirmPassword"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              style={{ width: "100%", padding: "12px 16px", fontSize: 15, border: "2px solid #e5e7eb", borderRadius: 10, outline: "none", boxSizing: "border-box", color: "#1f2937", backgroundColor: "#fff" }}
-              placeholder="Retapez votre mot de passe"
-              required
-              autoComplete="new-password"
-            />
+            <div style={{ position: "relative" }}>
+              <input
+                id="confirmPassword"
+                type={showConfirm ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                style={{ width: "100%", padding: "12px 48px 12px 16px", fontSize: 15, border: "2px solid #e5e7eb", borderRadius: 10, outline: "none", boxSizing: "border-box", color: "#1f2937", backgroundColor: "#fff" }}
+                placeholder="Retapez votre mot de passe"
+                required
+                autoComplete="new-password"
+              />
+              {eyeBtn(showConfirm, () => setShowConfirm(!showConfirm))}
+            </div>
           </div>
 
           <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>

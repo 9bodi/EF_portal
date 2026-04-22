@@ -8,6 +8,7 @@ import Image from "next/image";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -56,7 +57,7 @@ export default function LoginPage() {
           alt="Élu Formation"
           width={220}
           height={72}
-          style={{ objectFit: "contain" }}
+          style={{ objectFit: "contain", height: "auto" }}
           priority
         />
         <p style={{ color: "rgba(255,255,255,0.55)", marginTop: 12, fontSize: 15 }}>
@@ -91,16 +92,40 @@ export default function LoginPage() {
             <label htmlFor="password" style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#374151", marginBottom: 6 }}>
               Mot de passe
             </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{ width: "100%", padding: "12px 16px", fontSize: 15, border: "2px solid #e5e7eb", borderRadius: 10, outline: "none", boxSizing: "border-box", color: "#1f2937", backgroundColor: "#fff" }}
-              placeholder="Votre mot de passe"
-              required
-              autoComplete="current-password"
-            />
+            <div style={{ position: "relative" }}>
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{ width: "100%", padding: "12px 48px 12px 16px", fontSize: 15, border: "2px solid #e5e7eb", borderRadius: 10, outline: "none", boxSizing: "border-box", color: "#1f2937", backgroundColor: "#fff" }}
+                placeholder="Votre mot de passe"
+                required
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: "absolute",
+                  right: 12,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: 18,
+                  color: "#9ca3af",
+                  padding: 4,
+                  display: "flex",
+                  alignItems: "center",
+                }}
+                tabIndex={-1}
+                aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+              >
+                {showPassword ? "🙈" : "👁️"}
+              </button>
+            </div>
           </div>
 
           {error && (
@@ -119,7 +144,7 @@ export default function LoginPage() {
         </form>
 
         <div style={{ marginTop: 24, textAlign: "center" }}>
-          <a href="/reset-password" style={{ color: "#373b94", fontSize: 14, textDecoration: "underline" }}>
+          <a href="/forgot-password" style={{ color: "#373b94", fontSize: 14, textDecoration: "underline" }}>
             Mot de passe oublié ?
           </a>
         </div>
@@ -132,12 +157,11 @@ export default function LoginPage() {
           contact@eluformation.fr
         </p>
         <div style={{ marginTop: 16, display: "flex", justifyContent: "center", gap: 16 }}>
-          <a href="/mentions-legales" style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, textDecoration: "underline" }}>Mentions legales</a>
+          <a href="/mentions-legales" style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, textDecoration: "underline" }}>Mentions légales</a>
           <a href="/cgu" style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, textDecoration: "underline" }}>CGU</a>
-          <a href="/confidentialite" style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, textDecoration: "underline" }}>Confidentialite</a>
+          <a href="/confidentialite" style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, textDecoration: "underline" }}>Confidentialité</a>
         </div>
       </div>
     </div>
   );
 }
-
