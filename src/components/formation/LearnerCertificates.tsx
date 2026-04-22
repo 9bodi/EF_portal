@@ -46,7 +46,7 @@ export default function LearnerCertificates({ firstName, lastName, completed, to
       doc.setLineWidth(0.5);
       doc.rect(13, 13, w - 26, 184);
 
-      doc.addImage(logo, "PNG", (w - 70) / 2, 20, 70, 18);
+      doc.addImage(logo, "PNG", (w - 80) / 2, 20, 80, 17.5);
 
       doc.setFontSize(28);
       doc.setFont("helvetica", "bold");
@@ -116,7 +116,7 @@ export default function LearnerCertificates({ firstName, lastName, completed, to
       doc.setLineWidth(0.5);
       doc.rect(13, 13, w - 26, 184);
 
-      doc.addImage(logo, "PNG", (w - 70) / 2, 20, 70, 18);
+      doc.addImage(logo, "PNG", (w - 80) / 2, 20, 80, 17.5);
 
       doc.setFontSize(28);
       doc.setFont("helvetica", "bold");

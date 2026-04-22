@@ -93,7 +93,7 @@ export default async function LearnerDetailPage({ params }: PageProps) {
     ? new Date(Math.max(...allCompletedDates)).toLocaleDateString("fr-FR")
     : null;
 
-  const learnerData = {
+    const learnerData = {
     first_name: learner.first_name,
     last_name: learner.last_name,
     email: learner.email,
@@ -103,7 +103,10 @@ export default async function LearnerDetailPage({ params }: PageProps) {
     funding_type: learner.funding_type || "",
     group_name: learner.group_name || "",
     created_at: learner.created_at,
+    start_date: startDate,
+    end_date: endDate,
   };
+
 
   const chaptersData = chaptersWithProgress.map((ch: any) => ({
     order: ch.order,

@@ -22,7 +22,10 @@ interface LearnerData {
   funding_type?: string;
   group_name?: string;
   created_at: string;
+  start_date?: string | null;
+  end_date?: string | null;
 }
+
 
 interface Props {
   learner: LearnerData;
@@ -51,7 +54,7 @@ function statusLabel(s: string): string {
 }
 
 async function loadLogoBase64(): Promise<string> {
-  const res = await fetch("/img/LOGO_ELU-FORMATION_RVB.png");
+  const res = await fetch("/img/LOGO_ELU-FORMATION_BLANC100.png");
   const blob = await res.blob();
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -88,7 +91,7 @@ export default function LearnerPdfButtons({
 
       doc.setFillColor(55, 59, 148);
       doc.rect(0, 0, 210, 36, "F");
-      doc.addImage(logo, "PNG", 14, 10, 55, 14);
+      doc.addImage(logo, "PNG", 14, 10, 55, 12);
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(11);
       doc.text("Fiche apprenant", 210 - 14, 22, { align: "right" });
@@ -103,22 +106,17 @@ export default function LearnerPdfButtons({
       doc.setFont("helvetica", "normal");
       doc.setTextColor(80, 80, 80);
 
-      const infoLines = [
+            const infoLines = [
         `Email : ${learner.email}`,
         `Téléphone : ${learner.phone || "-"}`,
-        `Commune : ${learner.commune || "-"}${
-          learner.postal_code ? " (" + learner.postal_code + ")" : ""
-        }`,
-        `Financement : ${
-          learner.funding_type === "dif"
-            ? "DIF élu"
-            : learner.funding_type === "cohort"
-              ? "Cohorte"
-              : "-"
-        }`,
+        `Commune : ${learner.commune || "-"}${learner.postal_code ? " (" + learner.postal_code + ")" : ""}`,
+        `Financement : ${learner.funding_type === "dif" ? "DIF élu" : learner.funding_type === "cohort" ? "Cohorte" : "-"}`,
         `Groupe : ${learner.group_name || "-"}`,
         `Inscrit le : ${new Date(learner.created_at).toLocaleDateString("fr-FR")}`,
+        `Début formation : ${learner.start_date || "-"}`,
+        `Fin formation : ${learner.end_date || "En cours"}`,
       ];
+
 
       infoLines.forEach((line) => {
         doc.text(line, 14, y);
@@ -205,7 +203,7 @@ export default function LearnerPdfButtons({
       doc.setLineWidth(0.5);
       doc.rect(13, 13, w - 26, h - 26);
 
-      doc.addImage(logo, "PNG", (w - 70) / 2, 20, 70, 18);
+      doc.addImage(logo, "PNG", (w - 80) / 2, 20, 80, 17.5);
 
       doc.setFontSize(28);
       doc.setFont("helvetica", "bold");
@@ -288,7 +286,7 @@ export default function LearnerPdfButtons({
       doc.setLineWidth(0.5);
       doc.rect(13, 13, w - 26, h - 26);
 
-      doc.addImage(logo, "PNG", (w - 70) / 2, 20, 70, 18);
+      doc.addImage(logo, "PNG", (w - 80) / 2, 20, 80, 17.5);
 
       doc.setFontSize(28);
       doc.setFont("helvetica", "bold");
