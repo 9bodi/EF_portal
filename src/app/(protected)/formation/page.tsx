@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import ChapterList from "@/components/formation/ChapterList";
 import Image from "next/image";
 import LearnerCertificates from "@/components/formation/LearnerCertificates";
+import FormationClient from "@/components/formation/FormationClient";
+
 
 export const dynamic = "force-dynamic";
 
@@ -55,9 +57,13 @@ export default async function FormationPage() {
   await supabase.from("users").update({ last_login_at: new Date().toISOString() }).eq("id", user.id);
 
   const isAdmin = profile.role === "admin";
+    const showWelcome = !profile.welcome_seen;
 
-  return (
+
+    return (
+    <FormationClient userId={user.id} firstName={profile.first_name} showWelcome={showWelcome}>
     <div className="ef-root">
+
       <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap');
 
@@ -494,5 +500,7 @@ export default async function FormationPage() {
         <a href="mailto:contact@eluformation.fr">contact@eluformation.fr</a>
       </footer>
     </div>
+        </FormationClient>
   );
+
 }
