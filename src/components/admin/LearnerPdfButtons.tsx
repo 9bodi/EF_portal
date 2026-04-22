@@ -26,7 +26,6 @@ interface LearnerData {
   end_date?: string | null;
 }
 
-
 interface Props {
   learner: LearnerData;
   chapters: ChapterData[];
@@ -53,8 +52,8 @@ function statusLabel(s: string): string {
   return "Non commencé";
 }
 
-async function loadLogoBase64(): Promise<string> {
-  const res = await fetch("/img/LOGO_ELU-FORMATION_BLANC100.png");
+async function loadLogo(filename: string): Promise<string> {
+  const res = await fetch(`/img/${filename}`);
   const blob = await res.blob();
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -81,17 +80,21 @@ export default function LearnerPdfButtons({
   const canCertificateSuccess = avgScore !== null && avgScore >= 60 && allCompleted;
   const canCertificateCompletion = allCompleted;
 
+  // ────────────────────────────────────────
+  // 1) Export fiche apprenant
+  // ────────────────────────────────────────
   async function handleExportDetail() {
     setLoadingExport(true);
     try {
       const jsPDF = (await import("jspdf")).default;
       const autoTable = (await import("jspdf-autotable")).default;
-      const logo = await loadLogoBase64();
+      const logoWhite = await loadLogo("LOGO_ELU-FORMATION_BLANC100.png");
       const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
+      // Header bleu avec logo blanc
       doc.setFillColor(55, 59, 148);
       doc.rect(0, 0, 210, 36, "F");
-      doc.addImage(logo, "PNG", 14, 10, 55, 12);
+      doc.addImage(logoWhite, "PNG", 14, 10, 55, 12);
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(11);
       doc.text("Fiche apprenant", 210 - 14, 22, { align: "right" });
@@ -106,7 +109,7 @@ export default function LearnerPdfButtons({
       doc.setFont("helvetica", "normal");
       doc.setTextColor(80, 80, 80);
 
-            const infoLines = [
+      const infoLines = [
         `Email : ${learner.email}`,
         `Téléphone : ${learner.phone || "-"}`,
         `Commune : ${learner.commune || "-"}${learner.postal_code ? " (" + learner.postal_code + ")" : ""}`,
@@ -117,12 +120,12 @@ export default function LearnerPdfButtons({
         `Fin formation : ${learner.end_date || "En cours"}`,
       ];
 
-
       infoLines.forEach((line) => {
         doc.text(line, 14, y);
         y += 5;
       });
 
+      // Stats
       y += 6;
       doc.setFillColor(245, 243, 239);
       doc.roundedRect(14, y, 182, 18, 3, 3, "F");
@@ -136,6 +139,7 @@ export default function LearnerPdfButtons({
       doc.text(`Score : ${avgScore !== null ? avgScore + "%" : "-"}`, 162, statsY);
       y += 26;
 
+      // Table
       doc.setTextColor(55, 59, 148);
       doc.setFontSize(13);
       doc.setFont("helvetica", "bold");
@@ -188,11 +192,14 @@ export default function LearnerPdfButtons({
     setLoadingExport(false);
   }
 
+  // ────────────────────────────────────────
+  // 2) Certificat de réussite (≥60%)
+  // ────────────────────────────────────────
   async function handleCertificateSuccess() {
     setLoadingSuccess(true);
     try {
       const jsPDF = (await import("jspdf")).default;
-      const logo = await loadLogoBase64();
+      const logoColor = await loadLogo("LOGO_ELU-FORMATION_RVB.png");
       const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
       const w = 297;
       const h = 210;
@@ -203,7 +210,7 @@ export default function LearnerPdfButtons({
       doc.setLineWidth(0.5);
       doc.rect(13, 13, w - 26, h - 26);
 
-      doc.addImage(logo, "PNG", (w - 80) / 2, 20, 80, 17.5);
+      doc.addImage(logoColor, "PNG", (w - 80) / 2, 22, 80, 17.5);
 
       doc.setFontSize(28);
       doc.setFont("helvetica", "bold");
@@ -232,29 +239,17 @@ export default function LearnerPdfButtons({
       doc.setFontSize(16);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(55, 59, 148);
-      doc.text(
-        "Élu Formation — Communication politique et publique",
-        w / 2,
-        120,
-        { align: "center" }
-      );
+      doc.text("Élu Formation — Communication politique et publique", w / 2, 120, { align: "center" });
 
       doc.setFontSize(13);
       doc.setFont("helvetica", "normal");
       doc.setTextColor(60, 60, 60);
       doc.text(`avec une moyenne générale de ${avgScore}%`, w / 2, 134, { align: "center" });
-      doc.text(
-        `Modules complétés : ${completed}/${total}  —  Temps total : ${totalTimeStr}`,
-        w / 2,
-        143,
-        { align: "center" }
-      );
+      doc.text(`Modules complétés : ${completed}/${total}  —  Temps total : ${totalTimeStr}`, w / 2, 143, { align: "center" });
 
       doc.setFontSize(11);
       doc.setTextColor(120, 120, 120);
-      doc.text(`Délivré le ${new Date().toLocaleDateString("fr-FR")}`, w / 2, 160, {
-        align: "center",
-      });
+      doc.text(`Délivré le ${new Date().toLocaleDateString("fr-FR")}`, w / 2, 160, { align: "center" });
 
       doc.setDrawColor(180, 180, 180);
       doc.setLineWidth(0.3);
@@ -271,11 +266,14 @@ export default function LearnerPdfButtons({
     setLoadingSuccess(false);
   }
 
+  // ────────────────────────────────────────
+  // 3) Certificat de complétion
+  // ────────────────────────────────────────
   async function handleCertificateCompletion() {
     setLoadingCompletion(true);
     try {
       const jsPDF = (await import("jspdf")).default;
-      const logo = await loadLogoBase64();
+      const logoColor = await loadLogo("LOGO_ELU-FORMATION_RVB.png");
       const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
       const w = 297;
       const h = 210;
@@ -286,7 +284,7 @@ export default function LearnerPdfButtons({
       doc.setLineWidth(0.5);
       doc.rect(13, 13, w - 26, h - 26);
 
-      doc.addImage(logo, "PNG", (w - 80) / 2, 20, 80, 17.5);
+      doc.addImage(logoColor, "PNG", (w - 80) / 2, 22, 80, 17.5);
 
       doc.setFontSize(28);
       doc.setFont("helvetica", "bold");
@@ -315,29 +313,19 @@ export default function LearnerPdfButtons({
       doc.setFontSize(16);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(55, 59, 148);
-      doc.text(
-        "Élu Formation — Communication politique et publique",
-        w / 2,
-        120,
-        { align: "center" }
-      );
+      doc.text("Élu Formation — Communication politique et publique", w / 2, 120, { align: "center" });
 
       doc.setFontSize(13);
       doc.setFont("helvetica", "normal");
       doc.setTextColor(60, 60, 60);
-      doc.text(`${total} modules complétés  —  Temps total : ${totalTimeStr}`, w / 2, 138, {
-        align: "center",
-      });
-
+      doc.text(`${total} modules complétés  —  Temps total : ${totalTimeStr}`, w / 2, 138, { align: "center" });
       if (avgScore !== null) {
         doc.text(`Score moyen : ${avgScore}%`, w / 2, 147, { align: "center" });
       }
 
       doc.setFontSize(11);
       doc.setTextColor(120, 120, 120);
-      doc.text(`Délivré le ${new Date().toLocaleDateString("fr-FR")}`, w / 2, 164, {
-        align: "center",
-      });
+      doc.text(`Délivré le ${new Date().toLocaleDateString("fr-FR")}`, w / 2, 164, { align: "center" });
 
       doc.setDrawColor(180, 180, 180);
       doc.setLineWidth(0.3);
@@ -354,6 +342,9 @@ export default function LearnerPdfButtons({
     setLoadingCompletion(false);
   }
 
+  // ────────────────────────────────────────
+  // Render
+  // ────────────────────────────────────────
   const btnBase: React.CSSProperties = {
     padding: "10px 18px",
     borderRadius: 10,
@@ -369,12 +360,7 @@ export default function LearnerPdfButtons({
       <button
         onClick={handleExportDetail}
         disabled={loadingExport}
-        style={{
-          ...btnBase,
-          background: "#373b94",
-          color: "#fff",
-          opacity: loadingExport ? 0.6 : 1,
-        }}
+        style={{ ...btnBase, background: "#373b94", color: "#fff", opacity: loadingExport ? 0.6 : 1 }}
       >
         {loadingExport ? "Génération..." : "📄 Exporter la fiche PDF"}
       </button>
@@ -382,11 +368,7 @@ export default function LearnerPdfButtons({
       <button
         onClick={handleCertificateSuccess}
         disabled={!canCertificateSuccess || loadingSuccess}
-        title={
-          !canCertificateSuccess
-            ? "Requiert tous les modules terminés avec une moyenne ≥ 60%"
-            : ""
-        }
+        title={!canCertificateSuccess ? "Requiert tous les modules terminés avec une moyenne ≥ 60%" : ""}
         style={{
           ...btnBase,
           background: canCertificateSuccess ? "#373b94" : "#e5e7eb",

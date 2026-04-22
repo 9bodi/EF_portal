@@ -1,26 +1,26 @@
 ﻿import { createClient } from "@/lib/supabase/server";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { createClient as createBrowserClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import Image from "next/image";
 import UnlockButton from "@/components/admin/UnlockButton";
 import LearnerPdfButtons from "@/components/admin/LearnerPdfButtons";
 
 function getAdminClient() {
-  return createSupabaseClient(
+  return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
+    { auth: { persistSession: false } }
   );
 }
 
 function formatTime(t: string | null): string {
   if (!t) return "-";
-  const match = t.match(/(\d+):(\d+):(\d+)/);
-  if (!match) return "-";
-  const h = parseInt(match[1], 10);
-  const m = parseInt(match[2], 10);
-  if (h > 0) return h + "h" + String(m).padStart(2, "0");
-  return m + "min";
+  const m = t.match(/(\d+):(\d+):(\d+)/);
+  if (!m) return t;
+  const h = parseInt(m[1]);
+  const min = parseInt(m[2]);
+  if (h > 0) return `${h}h${String(min).padStart(2, "0")}`;
+  return `${min} min`;
 }
 
 interface PageProps {
@@ -33,47 +33,68 @@ export default async function LearnerDetailPage({ params }: PageProps) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const { data: adminProfile } = await supabase
+    .from("users")
+    .select("role, first_name, last_name")
+    .eq("id", user.id)
+    .single();
+  if (!adminProfile || adminProfile.role !== "admin") redirect("/formation");
+
   const admin = getAdminClient();
 
-  const { data: profile } = await admin.from("users").select("*").eq("id", user.id).single();
-  if (!profile || profile.role !== "admin") redirect("/formation");
+  const { data: profile } = await admin
+    .from("users")
+    .select("*")
+    .eq("id", learnerId)
+    .single();
+  if (!profile) redirect("/admin");
 
-  const { data: learner } = await admin.from("users").select("*").eq("id", learnerId).single();
-  if (!learner) redirect("/admin");
+  const { data: chapters } = await admin
+    .from("chapters")
+    .select("*")
+    .order("order", { ascending: true });
 
-  const { data: chapters } = await admin.from("chapters").select("*").order("order");
-  const { data: progress } = await admin.from("scorm_progress").select("*").eq("user_id", learnerId);
+  const { data: progressData } = await admin
+    .from("scorm_progress")
+    .select("*")
+    .eq("user_id", learnerId);
+
+  const progressMap: Record<string, any> = {};
+  (progressData || []).forEach((p: any) => {
+    progressMap[p.chapter_id] = p;
+  });
 
   const chaptersWithProgress = (chapters || []).map((ch: any) => {
-    const p = (progress || []).find((pr: any) => pr.chapter_id === ch.id);
+    const prog = progressMap[ch.id] || null;
     return {
       ...ch,
-      status: p?.status || "not_started",
-      total_time: p?.total_time || null,
-      score: p?.score ?? null,
-      completed_at: p?.completed_at || null,
-      last_accessed_at: p?.last_accessed_at || null,
+      progress: prog,
+      status: prog?.status || "not_started",
+      score: prog?.score ?? null,
+      total_time: prog?.total_time || null,
+      completed_at: prog?.completed_at || null,
+      last_accessed_at: prog?.last_accessed_at || null,
     };
   });
 
+  const total = chaptersWithProgress.length;
   const completed = chaptersWithProgress.filter(
     (c: any) => c.status === "completed" || c.status === "passed"
   ).length;
-  const total = chaptersWithProgress.length;
   const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   const totalSeconds = chaptersWithProgress.reduce((acc: number, c: any) => {
     if (!c.total_time) return acc;
-    const match = c.total_time.match(/(\d+):(\d+):(\d+)/);
-    if (!match) return acc;
-    return acc + parseInt(match[1], 10) * 3600 + parseInt(match[2], 10) * 60 + parseInt(match[3], 10);
+    const m = String(c.total_time).match(/(\d+):(\d+):(\d+)/);
+    if (!m) return acc;
+    return acc + parseInt(m[1]) * 3600 + parseInt(m[2]) * 60 + parseInt(m[3]);
   }, 0);
   const totalH = Math.floor(totalSeconds / 3600);
   const totalM = Math.floor((totalSeconds % 3600) / 60);
-  const totalTimeStr = totalH > 0 ? totalH + "h" + String(totalM).padStart(2, "0") : totalM + "min";
+  const totalTimeStr = totalH > 0 ? `${totalH}h${String(totalM).padStart(2, "0")}` : `${totalM} min`;
 
-  const scored = chaptersWithProgress.filter((c: any) => c.score !== null);
-  const avgScore = scored.length > 0
+  const scored = chaptersWithProgress.filter((c: any) => c.score != null);
+  const avgScore = scored.length
     ? Math.round(scored.reduce((a: number, c: any) => a + c.score, 0) / scored.length)
     : null;
 
@@ -93,87 +114,205 @@ export default async function LearnerDetailPage({ params }: PageProps) {
     ? new Date(Math.max(...allCompletedDates)).toLocaleDateString("fr-FR")
     : null;
 
-    const learnerData = {
-    first_name: learner.first_name,
-    last_name: learner.last_name,
-    email: learner.email,
-    phone: learner.phone || "",
-    commune: learner.commune || "",
-    postal_code: learner.postal_code || "",
-    funding_type: learner.funding_type || "",
-    group_name: learner.group_name || "",
-    created_at: learner.created_at,
+  // Données sérialisables pour le composant PDF
+  const learnerData = {
+    first_name: profile.first_name,
+    last_name: profile.last_name,
+    email: profile.email,
+    phone: profile.phone || null,
+    commune: profile.commune || null,
+    postal_code: profile.postal_code || null,
+    funding_type: profile.funding_type || null,
+    group_name: profile.group_name || null,
+    created_at: profile.created_at,
     start_date: startDate,
     end_date: endDate,
   };
 
-
-  const chaptersData = chaptersWithProgress.map((ch: any) => ({
-    order: ch.order,
-    title: ch.title,
-    status: ch.status,
-    total_time: ch.total_time,
-    score: ch.score,
-    completed_at: ch.completed_at,
-    last_accessed_at: ch.last_accessed_at,
+  const chaptersData = chaptersWithProgress.map((c: any) => ({
+    order: c.order,
+    title: c.title,
+    status: c.status,
+    total_time: c.total_time,
+    score: c.score,
+    completed_at: c.completed_at,
+    last_accessed_at: c.last_accessed_at,
   }));
 
   return (
-    <div className="min-h-screen" style={{ background: "#f5f3ef", fontFamily: "'DM Sans', sans-serif" }}>
-
-      <header style={{ background: "#373b94", padding: "14px 24px", display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center" }}>
+    <div style={{ minHeight: "100vh", background: "#0f1129" }}>
+      {/* HEADER */}
+      <header
+        style={{
+          background: "linear-gradient(135deg, #1a1d3a 0%, #0f1129 100%)",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          padding: "16px 32px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <Image src="/img/LOGO_ELU-FORMATION_BLANC100.png" alt="Élu Formation" width={160} height={52} style={{ objectFit: "contain", height: "auto" }} priority />
+          <Image
+            src="/img/LOGO_ELU-FORMATION_BLANC100.png"
+            alt="Logo"
+            width={140}
+            height={36}
+            style={{ objectFit: "contain", height: "auto" }}
+          />
+          <span
+            style={{
+              background: "rgba(255,255,255,0.08)",
+              color: "#9aa5b8",
+              fontSize: 11,
+              padding: "4px 10px",
+              borderRadius: 6,
+              fontWeight: 600,
+            }}
+          >
+            ADMIN
+          </span>
         </div>
-        <div style={{ textAlign: "center" }}>
-          <span style={{ display: "inline-block", background: "rgba(255,255,255,0.12)", color: "#fff", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", padding: "3px 10px", borderRadius: 99, marginBottom: 4 }}>ADMIN</span>
-          <p style={{ color: "#fff", fontWeight: 600, fontSize: 14, margin: 0 }}>{profile.first_name} {profile.last_name}</p>
-        </div>
-        <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 16 }}>
-          <a href="/admin" style={{ color: "#fff", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 8, padding: "7px 14px", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>← Retour</a>
-          <a href="/api/auth/logout" style={{ color: "#9aa5b8", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, padding: "7px 14px", background: "transparent", fontSize: 13, textDecoration: "none" }}>Déconnexion</a>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <span style={{ color: "#9aa5b8", fontSize: 13 }}>
+            {adminProfile.first_name} {adminProfile.last_name}
+          </span>
+          <a
+            href="/admin"
+            style={{
+              color: "#6b7aff",
+              fontSize: 13,
+              textDecoration: "none",
+              fontWeight: 600,
+            }}
+          >
+            ← Retour admin
+          </a>
+          <a
+            href="/api/auth/logout"
+            style={{
+              color: "#9aa5b8",
+              border: "1px solid rgba(255,255,255,0.15)",
+              borderRadius: 8,
+              padding: "7px 14px",
+              background: "transparent",
+              cursor: "pointer",
+              fontSize: 13,
+              textDecoration: "none",
+            }}
+          >
+            Déconnexion
+          </a>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-8">
-
-        {/* Learner info card */}
-        <div style={{ background: "#fff", borderRadius: 16, padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", marginBottom: 24, border: "1px solid rgba(55,59,148,0.08)" }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#373b94", marginBottom: 16 }}>{learner.first_name} {learner.last_name}</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm" style={{ color: "#4b5563" }}>
-            <div><span style={{ color: "#9ca3af" }}>Email</span><br/>{learner.email}</div>
-            <div><span style={{ color: "#9ca3af" }}>Téléphone</span><br/>{learner.phone || "-"}</div>
-            <div><span style={{ color: "#9ca3af" }}>Commune</span><br/>{learner.commune ? learner.commune + (learner.postal_code ? " (" + learner.postal_code + ")" : "") : learner.postal_code || "-"}</div>
-            <div><span style={{ color: "#9ca3af" }}>Financement</span><br/>{learner.funding_type === "dif" ? "DIF élu" : learner.funding_type === "cohort" ? "Cohorte" : "-"}</div>
-            <div><span style={{ color: "#9ca3af" }}>Groupe</span><br/>{learner.group_name || "-"}</div>
-            <div><span style={{ color: "#9ca3af" }}>Inscrit le</span><br/>{new Date(learner.created_at).toLocaleDateString("fr-FR")}</div>
-            <div><span style={{ color: "#9ca3af" }}>Dernière connexion</span><br/>{learner.last_login_at ? new Date(learner.last_login_at).toLocaleDateString("fr-FR") : "-"}</div>
-            <div><span style={{ color: "#9ca3af" }}>Début formation</span><br/>{startDate || "-"}</div>
-            <div><span style={{ color: "#9ca3af" }}>Fin formation</span><br/>{endDate || "En cours"}</div>
+      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
+        {/* INFOS APPRENANT */}
+        <div
+          style={{
+            background: "linear-gradient(135deg, #1a1d3a 0%, #252850 100%)",
+            borderRadius: 16,
+            padding: 28,
+            marginBottom: 24,
+            border: "1px solid rgba(255,255,255,0.06)",
+          }}
+        >
+          <h1 style={{ color: "#fff", fontSize: 22, fontWeight: 700, marginBottom: 20 }}>
+            {profile.first_name} {profile.last_name}
+          </h1>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: 16,
+              color: "#e2e8f0",
+              fontSize: 14,
+            }}
+          >
+            <div>
+              <span style={{ color: "#9ca3af" }}>Email</span>
+              <br />
+              {profile.email}
+            </div>
+            <div>
+              <span style={{ color: "#9ca3af" }}>Téléphone</span>
+              <br />
+              {profile.phone || "-"}
+            </div>
+            <div>
+              <span style={{ color: "#9ca3af" }}>Commune</span>
+              <br />
+              {profile.commune || "-"} {profile.postal_code ? `(${profile.postal_code})` : ""}
+            </div>
+            <div>
+              <span style={{ color: "#9ca3af" }}>Financement</span>
+              <br />
+              {profile.funding_type || "-"}
+            </div>
+            <div>
+              <span style={{ color: "#9ca3af" }}>Groupe</span>
+              <br />
+              {profile.group_name || "-"}
+            </div>
+            <div>
+              <span style={{ color: "#9ca3af" }}>Inscrit le</span>
+              <br />
+              {new Date(profile.created_at).toLocaleDateString("fr-FR")}
+            </div>
+            <div>
+              <span style={{ color: "#9ca3af" }}>Dernière connexion</span>
+              <br />
+              {profile.last_login_at
+                ? new Date(profile.last_login_at).toLocaleDateString("fr-FR")
+                : "-"}
+            </div>
+            <div>
+              <span style={{ color: "#9ca3af" }}>Début formation</span>
+              <br />
+              {startDate || "-"}
+            </div>
+            <div>
+              <span style={{ color: "#9ca3af" }}>Fin formation</span>
+              <br />
+              {endDate || "En cours"}
+            </div>
           </div>
         </div>
 
-        {/* Stat cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div style={{ background: "#fff", borderRadius: 16, padding: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", textAlign: "center", border: "1px solid rgba(55,59,148,0.08)" }}>
-            <p style={{ fontSize: 28, fontWeight: 700, color: "#373b94" }}>{pct}%</p>
-            <p style={{ fontSize: 13, color: "#6b7280" }}>Complétion</p>
-          </div>
-          <div style={{ background: "#fff", borderRadius: 16, padding: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", textAlign: "center", border: "1px solid rgba(55,59,148,0.08)" }}>
-            <p style={{ fontSize: 28, fontWeight: 700, color: "#373b94" }}>{completed}/{total}</p>
-            <p style={{ fontSize: 13, color: "#6b7280" }}>Chapitres terminés</p>
-          </div>
-          <div style={{ background: "#fff", borderRadius: 16, padding: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", textAlign: "center", border: "1px solid rgba(55,59,148,0.08)" }}>
-            <p style={{ fontSize: 28, fontWeight: 700, color: "#373b94" }}>{totalTimeStr}</p>
-            <p style={{ fontSize: 13, color: "#6b7280" }}>Temps total</p>
-          </div>
-          <div style={{ background: "#fff", borderRadius: 16, padding: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", textAlign: "center", border: "1px solid rgba(55,59,148,0.08)" }}>
-            <p style={{ fontSize: 28, fontWeight: 700, color: "#373b94" }}>{avgScore !== null ? avgScore + "%" : "-"}</p>
-            <p style={{ fontSize: 13, color: "#6b7280" }}>Score moyen</p>
-          </div>
+        {/* STATS */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: 16,
+            marginBottom: 24,
+          }}
+        >
+          {[
+            { label: "Complétion", value: `${pct}%`, color: "#6b7aff" },
+            { label: "Chapitres", value: `${completed}/${total}`, color: "#22c55e" },
+            { label: "Temps total", value: totalTimeStr, color: "#f59e0b" },
+            { label: "Score moyen", value: avgScore !== null ? `${avgScore}%` : "-", color: "#ef4444" },
+          ].map((s, i) => (
+            <div
+              key={i}
+              style={{
+                background: "linear-gradient(135deg, #1a1d3a 0%, #252850 100%)",
+                borderRadius: 14,
+                padding: 24,
+                border: "1px solid rgba(255,255,255,0.06)",
+                textAlign: "center",
+              }}
+            >
+              <div style={{ color: "#9ca3af", fontSize: 12, marginBottom: 8, fontWeight: 600 }}>
+                {s.label}
+              </div>
+              <div style={{ color: s.color, fontSize: 28, fontWeight: 800 }}>{s.value}</div>
+            </div>
+          ))}
         </div>
 
-        {/* PDF buttons */}
+        {/* BOUTONS PDF */}
         <LearnerPdfButtons
           learner={learnerData}
           chapters={chaptersData}
@@ -184,46 +323,100 @@ export default async function LearnerDetailPage({ params }: PageProps) {
           avgScore={avgScore}
         />
 
-        {/* Chapters table */}
-        <div style={{ background: "#fff", borderRadius: 16, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", overflow: "hidden", border: "1px solid rgba(55,59,148,0.08)" }}>
-          <div style={{ padding: "16px 24px", borderBottom: "1px solid #e5e7eb" }}>
-            <h3 style={{ fontSize: 17, fontWeight: 700, color: "#373b94" }}>Détail par chapitre</h3>
-          </div>
-          <table className="w-full">
-            <thead style={{ background: "#f9fafb" }}>
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Chapitre</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Statut</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Temps</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Score</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Terminé le</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Dernier accès</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Action</th>
+        {/* TABLEAU CHAPITRES */}
+        <div
+          style={{
+            background: "linear-gradient(135deg, #1a1d3a 0%, #252850 100%)",
+            borderRadius: 16,
+            padding: 24,
+            border: "1px solid rgba(255,255,255,0.06)",
+            overflowX: "auto",
+          }}
+        >
+          <h2 style={{ color: "#fff", fontSize: 16, fontWeight: 700, marginBottom: 16 }}>
+            Détail des chapitres
+          </h2>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+                {["#", "Chapitre", "Statut", "Temps", "Score", "Terminé le", "Dernier accès", ""].map(
+                  (h, i) => (
+                    <th
+                      key={i}
+                      style={{
+                        color: "#9ca3af",
+                        fontWeight: 600,
+                        textAlign: "left",
+                        padding: "10px 8px",
+                        fontSize: 11,
+                        textTransform: "uppercase",
+                        letterSpacing: 0.5,
+                      }}
+                    >
+                      {h}
+                    </th>
+                  )
+                )}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody>
               {chaptersWithProgress.map((ch: any) => {
-                const isCompleted = ch.status === "completed" || ch.status === "passed";
-                const isStarted = ch.status === "incomplete";
+                const statusColors: Record<string, { bg: string; text: string; label: string }> = {
+                  completed: { bg: "rgba(34,197,94,0.15)", text: "#22c55e", label: "Terminé" },
+                  passed: { bg: "rgba(34,197,94,0.15)", text: "#22c55e", label: "Réussi" },
+                  incomplete: { bg: "rgba(245,158,11,0.15)", text: "#f59e0b", label: "En cours" },
+                  not_started: { bg: "rgba(156,163,175,0.1)", text: "#9ca3af", label: "Non commencé" },
+                };
+                const st = statusColors[ch.status] || statusColors.not_started;
+
                 return (
-                  <tr key={ch.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 text-sm" style={{ color: "#373b94" }}>
-                      <span style={{ color: "#9ca3af", marginRight: 8 }}>{ch.order}</span>{ch.title}
+                  <tr
+                    key={ch.id}
+                    style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}
+                  >
+                    <td style={{ padding: "12px 8px", color: "#9ca3af" }}>{ch.order}</td>
+                    <td style={{ padding: "12px 8px", color: "#e2e8f0", fontWeight: 600 }}>
+                      {ch.title}
                     </td>
-                    <td className="px-4 py-4 text-center">
-                      {isCompleted && <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">Terminé</span>}
-                      {isStarted && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full font-medium">En cours</span>}
-                      {!isCompleted && !isStarted && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-full font-medium">Non commencé</span>}
+                    <td style={{ padding: "12px 8px" }}>
+                      <span
+                        style={{
+                          background: st.bg,
+                          color: st.text,
+                          padding: "4px 10px",
+                          borderRadius: 6,
+                          fontSize: 11,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {st.label}
+                      </span>
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-500 text-center">{formatTime(ch.total_time)}</td>
-                    <td className="px-4 py-4 text-sm text-gray-500 text-center">{ch.score !== null ? ch.score + "%" : "-"}</td>
-                    <td className="px-4 py-4 text-sm text-gray-500 text-center">{ch.completed_at ? new Date(ch.completed_at).toLocaleDateString("fr-FR") : "-"}</td>
-                    <td className="px-4 py-4 text-sm text-gray-500 text-center">{ch.last_accessed_at ? new Date(ch.last_accessed_at).toLocaleDateString("fr-FR") : "-"}</td>
-                    <td className="px-4 py-4 text-center">
-                      {isCompleted
-                        ? <span style={{ color: "#22c55e", fontSize: 12 }}>✓</span>
-                        : <UnlockButton learnerId={learnerId} chapterId={ch.id} />
-                      }
+                    <td style={{ padding: "12px 8px", color: "#e2e8f0" }}>
+                      {formatTime(ch.total_time)}
+                    </td>
+                    <td style={{ padding: "12px 8px", color: "#e2e8f0" }}>
+                      {ch.score != null ? `${ch.score}%` : "-"}
+                    </td>
+                    <td style={{ padding: "12px 8px", color: "#9ca3af", fontSize: 12 }}>
+                      {ch.completed_at
+                        ? new Date(ch.completed_at).toLocaleDateString("fr-FR")
+                        : "-"}
+                    </td>
+                    <td style={{ padding: "12px 8px", color: "#9ca3af", fontSize: 12 }}>
+                      {ch.last_accessed_at
+                        ? new Date(ch.last_accessed_at).toLocaleDateString("fr-FR")
+                        : "-"}
+                    </td>
+                    <td style={{ padding: "12px 8px" }}>
+                      {ch.status !== "completed" && ch.status !== "passed" && (
+                        <UnlockButton
+  learnerId={learnerId}
+  chapterId={ch.id}
+/>
+
+
+                      )}
                     </td>
                   </tr>
                 );
@@ -233,8 +426,21 @@ export default async function LearnerDetailPage({ params }: PageProps) {
         </div>
       </main>
 
-      <footer style={{ textAlign: "center", padding: "24px", fontSize: 13, color: "#9ca3af" }}>
-        Support : contact@eluformation.fr
+      {/* FOOTER */}
+      <footer
+        style={{
+          textAlign: "center",
+          padding: "24px 0",
+          color: "#9ca3af",
+          fontSize: 12,
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+          marginTop: 40,
+        }}
+      >
+        Besoin d&apos;aide ?{" "}
+        <a href="mailto:contact@eluformation.fr" style={{ color: "#6b7aff" }}>
+          contact@eluformation.fr
+        </a>
       </footer>
     </div>
   );
