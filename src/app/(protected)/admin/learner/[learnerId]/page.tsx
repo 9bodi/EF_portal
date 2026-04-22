@@ -1,4 +1,4 @@
-﻿import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { createClient as createBrowserClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import Image from "next/image";
@@ -140,12 +140,12 @@ export default async function LearnerDetailPage({ params }: PageProps) {
   }));
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0f1129" }}>
+    <div style={{ minHeight: "100vh", background: "#f5f5f5" }}>
       {/* HEADER */}
       <header
         style={{
-          background: "linear-gradient(135deg, #1a1d3a 0%, #0f1129 100%)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          background: "linear-gradient(135deg, #373b94 0%, #2a2d72 100%)",
+          borderBottom: "1px solid #e5e7eb",
           padding: "16px 32px",
           display: "flex",
           alignItems: "center",
@@ -210,14 +210,14 @@ export default async function LearnerDetailPage({ params }: PageProps) {
         {/* INFOS APPRENANT */}
         <div
           style={{
-            background: "linear-gradient(135deg, #1a1d3a 0%, #252850 100%)",
+            background: "#fff",
             borderRadius: 16,
             padding: 28,
             marginBottom: 24,
-            border: "1px solid rgba(255,255,255,0.06)",
+            border: "1px solid #e5e7eb",
           }}
         >
-          <h1 style={{ color: "#fff", fontSize: 22, fontWeight: 700, marginBottom: 20 }}>
+          <h1 style={{ color: "#111827", fontSize: 22, fontWeight: 700, marginBottom: 20 }}>
             {profile.first_name} {profile.last_name}
           </h1>
           <div
@@ -225,7 +225,7 @@ export default async function LearnerDetailPage({ params }: PageProps) {
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
               gap: 16,
-              color: "#e2e8f0",
+              color: "#1f2937",
               fontSize: 14,
             }}
           >
@@ -297,10 +297,10 @@ export default async function LearnerDetailPage({ params }: PageProps) {
             <div
               key={i}
               style={{
-                background: "linear-gradient(135deg, #1a1d3a 0%, #252850 100%)",
+                background: "#fff",
                 borderRadius: 14,
                 padding: 24,
-                border: "1px solid rgba(255,255,255,0.06)",
+                border: "1px solid #e5e7eb",
                 textAlign: "center",
               }}
             >
@@ -326,19 +326,19 @@ export default async function LearnerDetailPage({ params }: PageProps) {
         {/* TABLEAU CHAPITRES */}
         <div
           style={{
-            background: "linear-gradient(135deg, #1a1d3a 0%, #252850 100%)",
+            background: "#fff",
             borderRadius: 16,
             padding: 24,
-            border: "1px solid rgba(255,255,255,0.06)",
+            border: "1px solid #e5e7eb",
             overflowX: "auto",
           }}
         >
-          <h2 style={{ color: "#fff", fontSize: 16, fontWeight: 700, marginBottom: 16 }}>
+          <h2 style={{ color: "#111827", fontSize: 16, fontWeight: 700, marginBottom: 16 }}>
             Détail des chapitres
           </h2>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
-              <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+              <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
                 {["#", "Chapitre", "Statut", "Temps", "Score", "Terminé le", "Dernier accès", ""].map(
                   (h, i) => (
                     <th
@@ -372,10 +372,10 @@ export default async function LearnerDetailPage({ params }: PageProps) {
                 return (
                   <tr
                     key={ch.id}
-                    style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}
+                    style={{ borderBottom: "1px solid #f3f4f6" }}
                   >
                     <td style={{ padding: "12px 8px", color: "#9ca3af" }}>{ch.order}</td>
-                    <td style={{ padding: "12px 8px", color: "#e2e8f0", fontWeight: 600 }}>
+                    <td style={{ padding: "12px 8px", color: "#1f2937", fontWeight: 600 }}>
                       {ch.title}
                     </td>
                     <td style={{ padding: "12px 8px" }}>
@@ -392,10 +392,10 @@ export default async function LearnerDetailPage({ params }: PageProps) {
                         {st.label}
                       </span>
                     </td>
-                    <td style={{ padding: "12px 8px", color: "#e2e8f0" }}>
+                    <td style={{ padding: "12px 8px", color: "#1f2937" }}>
                       {formatTime(ch.total_time)}
                     </td>
-                    <td style={{ padding: "12px 8px", color: "#e2e8f0" }}>
+                    <td style={{ padding: "12px 8px", color: "#1f2937" }}>
                       {ch.score != null ? `${ch.score}%` : "-"}
                     </td>
                     <td style={{ padding: "12px 8px", color: "#9ca3af", fontSize: 12 }}>
@@ -433,7 +433,7 @@ export default async function LearnerDetailPage({ params }: PageProps) {
           padding: "24px 0",
           color: "#9ca3af",
           fontSize: 12,
-          borderTop: "1px solid rgba(255,255,255,0.06)",
+          borderTop: "1px solid #e5e7eb",
           marginTop: 40,
         }}
       >
