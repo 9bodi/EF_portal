@@ -1,9 +1,29 @@
 ﻿import { createClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST() {
+async function handleLogout(request: NextRequest) {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  return NextResponse.redirect(new URL("/login", appUrl));
+
+  const url = request.nextUrl.clone();
+  url.pathname = "/login";
+  url.search = "";
+
+  const response = NextResponse.redirect(url);
+
+  request.cookies.getAll().forEach((cookie) => {
+    if (cookie.name.startsWith("sb-")) {
+      response.cookies.delete(cookie.name);
+    }
+  });
+
+  return response;
+}
+
+export async function POST(request: NextRequest) {
+  return handleLogout(request);
+}
+
+export async function GET(request: NextRequest) {
+  return handleLogout(request);
 }

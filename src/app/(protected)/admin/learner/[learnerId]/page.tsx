@@ -195,8 +195,8 @@ export default async function LearnerDetailPage({ params }: PageProps) {
             ← Retour
           </a>
 
-          <form action="/api/auth/logout" method="POST">
-            <button
+          <a
+              href="/api/auth/logout"
               style={{
                 color: "#9aa5b8",
                 border: "1px solid rgba(255,255,255,0.15)",
@@ -205,11 +205,12 @@ export default async function LearnerDetailPage({ params }: PageProps) {
                 background: "transparent",
                 cursor: "pointer",
                 fontSize: 13,
+                textDecoration: "none",
               }}
             >
               Déconnexion
-            </button>
-          </form>
+            </a>
+
         </div>
       </header>
 

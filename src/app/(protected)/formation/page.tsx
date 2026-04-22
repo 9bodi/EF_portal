@@ -399,11 +399,10 @@ export default async function FormationPage() {
               Admin
             </a>
           )}
-          <form action="/api/auth/logout" method="POST">
-            <button type="submit" className="ef-btn-ghost">
+          <a href="/api/auth/logout" className="ef-btn-ghost" style={{ textDecoration: "none" }}>
               Déconnexion
-            </button>
-          </form>
+            </a>
+
         </div>
       </header>
 
