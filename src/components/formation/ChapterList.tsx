@@ -2,23 +2,30 @@
 
 import { ChapterWithProgress } from "@/types";
 
-export default function ChapterList({ chapters }: { chapters: ChapterWithProgress[] }) {
+interface Props {
+  chapters: ChapterWithProgress[];
+  accessExpired?: boolean;
+}
+
+export default function ChapterList({ chapters, accessExpired = false }: Props) {
   const sorted = [...chapters].sort((a, b) => a.order - b.order);
 
   // ── Unlock logic ──
   const unlockedSet = new Set<string>();
-  for (let i = 0; i < sorted.length; i++) {
-    const ch = sorted[i];
-    const status = ch.progress?.status;
-    if (ch.order <= 1) { unlockedSet.add(ch.id); continue; }
-    if (status === "incomplete" || status === "completed" || status === "passed") {
-      unlockedSet.add(ch.id); continue;
-    }
-    const prev = sorted.find((c) => c.order === ch.order - 1);
-    if (prev) {
-      const prevStatus = prev.progress?.status;
-      if (prevStatus === "incomplete" || prevStatus === "completed" || prevStatus === "passed") {
-        unlockedSet.add(ch.id);
+  if (!accessExpired) {
+    for (let i = 0; i < sorted.length; i++) {
+      const ch = sorted[i];
+      const status = ch.progress?.status;
+      if (ch.order <= 1) { unlockedSet.add(ch.id); continue; }
+      if (status === "incomplete" || status === "completed" || status === "passed") {
+        unlockedSet.add(ch.id); continue;
+      }
+      const prev = sorted.find((c) => c.order === ch.order - 1);
+      if (prev) {
+        const prevStatus = prev.progress?.status;
+        if (prevStatus === "incomplete" || prevStatus === "completed" || prevStatus === "passed") {
+          unlockedSet.add(ch.id);
+        }
       }
     }
   }
@@ -42,7 +49,6 @@ export default function ChapterList({ chapters }: { chapters: ChapterWithProgres
           max-width: 800px;
           margin: 0 auto;
         }
-
         .cl-rect {
           display: flex;
           align-items: center;
@@ -68,8 +74,6 @@ export default function ChapterList({ chapters }: { chapters: ChapterWithProgres
           opacity: 0.5;
           cursor: default;
         }
-
-        /* Progress bar at bottom of card */
         .cl-progress-bar {
           position: absolute;
           bottom: 0;
@@ -82,8 +86,6 @@ export default function ChapterList({ chapters }: { chapters: ChapterWithProgres
         .cl-progress-bar--done {
           background: #22c55e;
         }
-
-        /* Number circle */
         .cl-number {
           width: 52px;
           height: 52px;
@@ -107,8 +109,6 @@ export default function ChapterList({ chapters }: { chapters: ChapterWithProgres
           background: #e5e7eb;
           color: #9ca3af;
         }
-
-        /* Content area */
         .cl-content {
           flex: 1;
           min-width: 0;
@@ -133,8 +133,6 @@ export default function ChapterList({ chapters }: { chapters: ChapterWithProgres
           color: #9ca3af;
           margin-top: 6px;
         }
-
-        /* Right side badge */
         .cl-status {
           flex-shrink: 0;
           padding: 6px 14px;
@@ -154,8 +152,11 @@ export default function ChapterList({ chapters }: { chapters: ChapterWithProgres
         .cl-status--locked {
           font-size: 18px;
         }
-
-        /* Vertical connector line between cards */
+        .cl-status--expired {
+          background: #fef2f2;
+          color: #ef4444;
+          font-size: 12px;
+        }
         .cl-connector {
           width: 2px;
           height: 16px;
@@ -163,8 +164,26 @@ export default function ChapterList({ chapters }: { chapters: ChapterWithProgres
           margin: 0 auto;
           flex-shrink: 0;
         }
-
-        /* ── MOBILE adjustments ── */
+        .cl-expired-banner {
+          background: linear-gradient(135deg, #fef2f2 0%, #fff5f5 100%);
+          border: 1px solid #fecaca;
+          border-radius: 12px;
+          padding: 20px 24px;
+          text-align: center;
+          margin-bottom: 20px;
+          max-width: 800px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+        .cl-expired-banner p {
+          margin: 0;
+          color: #991b1b;
+          font-size: 14px;
+          line-height: 1.6;
+        }
+        .cl-expired-banner strong {
+          font-size: 16px;
+        }
         @media (max-width: 640px) {
           .cl-rect {
             padding: 16px 16px;
@@ -186,6 +205,13 @@ export default function ChapterList({ chapters }: { chapters: ChapterWithProgres
         }
       ` }} />
 
+      {accessExpired && (
+        <div className="cl-expired-banner">
+          <p><strong>Votre accès a expiré</strong></p>
+          <p>Votre période de 30 jours est terminée. Contactez-nous à <a href="mailto:contact@eluformation.fr" style={{ color: "#373b94", fontWeight: 600 }}>contact@eluformation.fr</a> pour prolonger votre accès.</p>
+        </div>
+      )}
+
       <div className="cl-list">
         {sorted.map((chapter, idx) => {
           const status = chapter.progress?.status;
@@ -194,34 +220,25 @@ export default function ChapterList({ chapters }: { chapters: ChapterWithProgres
           const isUnlocked = unlockedSet.has(chapter.id);
           const isLocked = !isUnlocked;
           const timeDisplay = formatTime(chapter.progress?.total_time);
-
-          // Progress percentage for the bar
           const progressPct = isDone ? 100 : isActive ? 40 : 0;
 
           const numberClass = `cl-number${isDone ? " cl-number--done" : isActive ? " cl-number--active" : isLocked ? " cl-number--locked" : ""}`;
-          const cardClass = `cl-rect${isActive ? " cl-rect--active" : isLocked ? " cl-rect--locked" : ""}`;
+          const cardClass = `cl-rect${isActive && !accessExpired ? " cl-rect--active" : isLocked || accessExpired ? " cl-rect--locked" : ""}`;
 
           return (
             <div key={chapter.id}>
-              {/* Connector line between cards */}
               {idx > 0 && <div className="cl-connector" />}
-
               <a
-                href={isLocked ? undefined : `/formation/${chapter.id}`}
+                href={isLocked || accessExpired ? undefined : `/formation/${chapter.id}`}
                 className={cardClass}
               >
-                {/* Progress bar at bottom */}
                 <div
                   className={`cl-progress-bar${isDone ? " cl-progress-bar--done" : ""}`}
                   style={{ width: `${progressPct}%` }}
                 />
-
-                {/* Number circle */}
                 <div className={numberClass}>
-                  {isLocked ? "🔒" : isDone ? "✓" : chapter.order === 0 ? "0" : chapter.order}
+                  {isLocked || accessExpired ? "🔒" : isDone ? "✓" : chapter.order === 0 ? "0" : chapter.order}
                 </div>
-
-                {/* Text content */}
                 <div className="cl-content">
                   <p className="cl-label">
                     {chapter.order === 0 ? "Introduction" : `Module ${chapter.order}`}
@@ -233,11 +250,15 @@ export default function ChapterList({ chapters }: { chapters: ChapterWithProgres
                     <p className="cl-chapter-time">~{chapter.estimated_duration} min</p>
                   ) : null}
                 </div>
-
-                {/* Status badge */}
-                {isDone && <span className="cl-status cl-status--done">Terminé</span>}
-                {isActive && <span className="cl-status cl-status--active">En cours</span>}
-                {isLocked && <span className="cl-status cl-status--locked">🔒</span>}
+                {accessExpired ? (
+                  <span className="cl-status cl-status--expired">Accès expiré</span>
+                ) : isDone ? (
+                  <span className="cl-status cl-status--done">Terminé</span>
+                ) : isActive ? (
+                  <span className="cl-status cl-status--active">En cours</span>
+                ) : isLocked ? (
+                  <span className="cl-status cl-status--locked">🔒</span>
+                ) : null}
               </a>
             </div>
           );

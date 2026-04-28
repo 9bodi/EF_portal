@@ -57,6 +57,10 @@ export default async function FormationPage() {
   await supabase.from("users").update({ last_login_at: new Date().toISOString() }).eq("id", user.id);
 
   const isAdmin = profile.role === "admin";
+  const accessExpired = profile.access_expires_at
+  ? new Date(profile.access_expires_at).getTime() < Date.now()
+  : false;
+
     const showWelcome = !profile.welcome_seen;
 
 
@@ -492,7 +496,8 @@ export default async function FormationPage() {
           <span className="ef-section-count">{total} chapitre{total > 1 ? "s" : ""}</span>
         </div>
 
-        <ChapterList chapters={chaptersWithProgress} />
+        <ChapterList chapters={chaptersWithProgress} accessExpired={accessExpired} />
+
       </main>
 
       <footer className="ef-footer">

@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import Image from "next/image";
 import UnlockButton from "@/components/admin/UnlockButton";
 import LearnerPdfButtons from "@/components/admin/LearnerPdfButtons";
+import ReactivateButton from "@/components/admin/ReactivateButton";
+
 
 function getAdminClient() {
   return createBrowserClient(
@@ -113,6 +115,11 @@ export default async function LearnerDetailPage({ params }: PageProps) {
   const endDate = completed === total && allCompletedDates.length > 0
     ? new Date(Math.max(...allCompletedDates)).toLocaleDateString("fr-FR")
     : null;
+
+    const accessExpired = profile.access_expires_at
+  ? new Date(profile.access_expires_at).getTime() < Date.now()
+  : false;
+
 
   // Données sérialisables pour le composant PDF
   const learnerData = {
@@ -277,6 +284,17 @@ export default async function LearnerDetailPage({ params }: PageProps) {
               {endDate || "En cours"}
             </div>
           </div>
+          <div>
+  <span style={{ color: "#9ca3af" }}>Fin d'accès</span>
+  <br />
+  <span style={{ color: accessExpired ? "#ef4444" : "#22c55e", fontWeight: 600 }}>
+    {profile.access_expires_at
+      ? new Date(profile.access_expires_at).toLocaleDateString("fr-FR")
+      : "-"}
+    {accessExpired && <span style={{ marginLeft: 6 }}>Expiré</span>}
+  </span>
+</div>
+
         </div>
 
         {/* STATS */}
@@ -312,7 +330,13 @@ export default async function LearnerDetailPage({ params }: PageProps) {
           ))}
         </div>
 
-        {/* BOUTONS PDF */}
+        {/* BOUTONS */}
+        {accessExpired && (
+  <div style={{ marginBottom: 16 }}>
+    <ReactivateButton learnerId={learnerId} />
+  </div>
+)}
+
         <LearnerPdfButtons
           learner={learnerData}
           chapters={chaptersData}
