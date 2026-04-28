@@ -54,6 +54,9 @@ export async function POST(request: NextRequest) {
     role: "learner",
     must_change_password: true,
     created_at: new Date().toISOString(),
+    access_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+
+
   };
   if (phone) insertData.phone = phone;
   if (commune) insertData.commune = commune;

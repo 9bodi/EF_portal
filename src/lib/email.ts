@@ -32,7 +32,10 @@ export async function sendWelcomeEmail(
         <div style="background-color: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
           <p style="font-size: 16px; color: #1f2937;">Bonjour ${firstName},</p>
           <p style="font-size: 14px; color: #4b5563; line-height: 1.7;">
-            Votre espace de formation en ligne est prêt ! Vous allez pouvoir accéder à l'ensemble des modules de la formation <strong>« Maîtriser sa communication d'élu local »</strong>.
+            Votre espace de formation en ligne est prêt ! Vous allez pouvoir accéder à l'ensemble des modules de la formation <strong>« Bien gérer son image et communication d'élu local »</strong>.
+          </p>
+          <p style="font-size: 14px; color: #4b5563; line-height: 1.7;">
+            <strong style="color: #1f2937;">Vous disposez de 30 jours pour réaliser la formation.</strong>
           </p>
           <p style="font-size: 14px; color: #4b5563; line-height: 1.7;">
             Voici vos identifiants de connexion :
