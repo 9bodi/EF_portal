@@ -153,10 +153,17 @@ export default function ChapterList({ chapters, accessExpired = false }: Props) 
           font-size: 18px;
         }
         .cl-status--expired {
+        
           background: #fef2f2;
           color: #ef4444;
           font-size: 12px;
         }
+          .cl-status--quiz-failed {
+  background: #fef3c7;
+  color: #b45309;
+  font-size: 12px;
+}
+
         .cl-connector {
           width: 2px;
           height: 16px;
@@ -251,14 +258,17 @@ export default function ChapterList({ chapters, accessExpired = false }: Props) 
                   ) : null}
                 </div>
                 {accessExpired ? (
-                  <span className="cl-status cl-status--expired">Accès expiré</span>
-                ) : isDone ? (
-                  <span className="cl-status cl-status--done">Terminé</span>
-                ) : isActive ? (
-                  <span className="cl-status cl-status--active">En cours</span>
-                ) : isLocked ? (
-                  <span className="cl-status cl-status--locked">🔒</span>
-                ) : null}
+  <span className="cl-status cl-status--expired">Accès expiré</span>
+) : isDone ? (
+  <span className="cl-status cl-status--done">Terminé</span>
+) : isActive && chapter.progress?.score != null && chapter.progress.score > 0 && chapter.progress.score < 66 ? (
+  <span className="cl-status cl-status--quiz-failed">Quiz non validé ({chapter.progress.score}%)</span>
+) : isActive ? (
+  <span className="cl-status cl-status--active">En cours</span>
+) : isLocked ? (
+  <span className="cl-status cl-status--locked">🔒</span>
+) : null}
+
               </a>
             </div>
           );
