@@ -1,6 +1,8 @@
 ﻿import { createClient } from "@/lib/supabase/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
+
 
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -123,6 +125,8 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`[SCORM] ✓ chapter=${chapterId} status=${normalizedStatus} total_time=${newTotalTime}`);
+        revalidatePath("/formation");
+
     return NextResponse.json({ success: true });
 
   } catch (err: unknown) {
