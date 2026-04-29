@@ -43,7 +43,8 @@ export default function ReactivateButton({ learnerId }: { learnerId: string }) {
         opacity: loading ? 0.6 : 1,
       }}
     >
-      {done ? "✅ Accès réactivé !" : loading ? "Réactivation..." : "🔄 Réactiver l'accès (30j)"}
+      {done ? "Accès réactivé !" : loading ? "Réactivation..." : "Réactiver l'accès (30j)"}
+
     </button>
   );
 }

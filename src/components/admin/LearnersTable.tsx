@@ -177,7 +177,7 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
     };
     doc.text("Onglet : " + tabLabels[activeTab], 110, 22);
 
-    let startY = 40;
+    const startY = 40;
 
     const tableData = filtered.map((l) => [
       l.last_name + " " + l.first_name,
@@ -203,12 +203,12 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
       columnStyles: {
         0: { cellWidth: 32 },
         1: { cellWidth: 38 },
-        5: { halign: "center" },
-        6: { halign: "center" },
-        7: { halign: "center" },
-        8: { halign: "center" },
-        9: { halign: "center" },
-        10: { halign: "center" },
+        5: { halign: "center" as const },
+        6: { halign: "center" as const },
+        7: { halign: "center" as const },
+        8: { halign: "center" as const },
+        9: { halign: "center" as const },
+        10: { halign: "center" as const },
       },
       margin: { left: 14, right: 14 },
       didDrawPage: (data: any) => {
@@ -404,13 +404,33 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
               {filtered.map((l) => {
                 const createdMs = new Date(l.created_at).getTime();
                 const factuDate = new Date(createdMs + 15 * 24 * 60 * 60 * 1000);
+                const factuPassed = factuDate.getTime() < now;
                 const expiresStr = daysLeft(l.access_expires_at);
                 const isExpired = expiresStr === "Expiré";
 
                 return (
                   <tr key={l.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 text-sm font-medium text-[#373b94]">
-                      <a href={"/admin/learner/" + l.id} className="hover:underline">
+                    <td className="px-4 py-4 text-sm font-medium">
+                      <a
+                        href={"/admin/learner/" + l.id}
+                        style={{
+                          color: "#373b94",
+                          textDecoration: "none",
+                          padding: "4px 10px",
+                          borderRadius: 6,
+                          border: "1px solid rgba(55,59,148,0.2)",
+                          display: "inline-block",
+                          transition: "all .15s",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "#373b94";
+                          e.currentTarget.style.color = "#fff";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "transparent";
+                          e.currentTarget.style.color = "#373b94";
+                        }}
+                      >
                         {l.last_name} {l.first_name}
                       </a>
                     </td>
@@ -419,17 +439,18 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
                     <td className="px-4 py-4 text-sm text-gray-500">{l.funding_type === "dif" ? "DIF" : l.funding_type === "cohort" ? "Cohorte" : "-"}</td>
                     <td className="px-4 py-4 text-sm text-gray-500 text-center">{fmtDate(l.created_at)}</td>
                     <td className="px-4 py-4 text-sm text-gray-500 text-center">{fmtDate(l.last_login_at)}</td>
-                    <td className="px-4 py-4 text-sm text-gray-500 text-center">{factuDate.toLocaleDateString("fr-FR")}</td>
                     <td className="px-4 py-4 text-sm text-center">
                       <span style={{
-                        color: isExpired ? "#ef4444" : "#22c55e",
-                        fontWeight: 600,
-                        fontSize: 12,
+                        color: factuPassed ? "#ef4444" : "#6b7280",
+                        fontWeight: factuPassed ? 600 : 400,
                       }}>
-                        {fmtDate(l.access_expires_at)}
-                        {!isExpired && <span style={{ color: "#9ca3af", fontWeight: 400 }}> ({expiresStr})</span>}
-                        {isExpired && <span style={{ marginLeft: 4, color: "#ef4444" }}>Expiré</span>}
+                        {factuDate.toLocaleDateString("fr-FR")}
                       </span>
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-500 text-center">
+                      {fmtDate(l.access_expires_at)}
+                      {!isExpired && <span style={{ color: "#9ca3af", fontSize: 11 }}> ({expiresStr})</span>}
+                      {isExpired && <span style={{ color: "#ef4444", fontWeight: 600, fontSize: 11, marginLeft: 4 }}>Expiré</span>}
                     </td>
                     <td className="px-4 py-4 text-center">
                       <div className="flex items-center justify-center gap-2">
@@ -451,7 +472,7 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
                             className="px-2 py-1 text-xs bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition"
                             style={{ opacity: resendingId === l.id ? 0.5 : 1 }}
                           >
-                            {resendingId === l.id ? "..." : "📧 Renvoyer"}
+                            {resendingId === l.id ? "Envoi..." : "Renvoyer mail"}
                           </button>
                         )}
                         <button
@@ -459,7 +480,7 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
                           title="Supprimer l'apprenant"
                           className="px-2 py-1 text-xs bg-red-50 text-red-500 rounded hover:bg-red-100 transition"
                         >
-                          🗑
+                          Supprimer
                         </button>
                       </div>
                     </td>

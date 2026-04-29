@@ -6,7 +6,6 @@ import UnlockButton from "@/components/admin/UnlockButton";
 import LearnerPdfButtons from "@/components/admin/LearnerPdfButtons";
 import ReactivateButton from "@/components/admin/ReactivateButton";
 
-
 function getAdminClient() {
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -100,7 +99,6 @@ export default async function LearnerDetailPage({ params }: PageProps) {
     ? Math.round(scored.reduce((a: number, c: any) => a + c.score, 0) / scored.length)
     : null;
 
-  // Date début = premier accès à un module
   const allAccessDates = chaptersWithProgress
     .filter((c: any) => c.last_accessed_at)
     .map((c: any) => new Date(c.last_accessed_at).getTime());
@@ -108,7 +106,6 @@ export default async function LearnerDetailPage({ params }: PageProps) {
     ? new Date(Math.min(...allAccessDates)).toLocaleDateString("fr-FR")
     : null;
 
-  // Date fin = dernier module terminé (seulement si tous sont terminés)
   const allCompletedDates = chaptersWithProgress
     .filter((c: any) => c.completed_at)
     .map((c: any) => new Date(c.completed_at).getTime());
@@ -116,12 +113,10 @@ export default async function LearnerDetailPage({ params }: PageProps) {
     ? new Date(Math.max(...allCompletedDates)).toLocaleDateString("fr-FR")
     : null;
 
-    const accessExpired = profile.access_expires_at
-  ? new Date(profile.access_expires_at).getTime() < Date.now()
-  : false;
+  const accessExpired = profile.access_expires_at
+    ? new Date(profile.access_expires_at).getTime() < Date.now()
+    : false;
 
-
-  // Données sérialisables pour le composant PDF
   const learnerData = {
     first_name: profile.first_name,
     last_name: profile.last_name,
@@ -185,17 +180,6 @@ export default async function LearnerDetailPage({ params }: PageProps) {
             {adminProfile.first_name} {adminProfile.last_name}
           </span>
           <a
-            href="/admin"
-            style={{
-              color: "#6b7aff",
-              fontSize: 13,
-              textDecoration: "none",
-              fontWeight: 600,
-            }}
-          >
-            ← Retour admin
-          </a>
-          <a
             href="/api/auth/logout"
             style={{
               color: "#9aa5b8",
@@ -213,7 +197,27 @@ export default async function LearnerDetailPage({ params }: PageProps) {
         </div>
       </header>
 
-      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
+      {/* BOUTON RETOUR */}
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "16px 24px 0" }}>
+        <a
+          href="/admin"
+          style={{
+            display: "inline-block",
+            color: "#373b94",
+            fontSize: 14,
+            fontWeight: 600,
+            textDecoration: "none",
+            padding: "8px 16px",
+            borderRadius: 8,
+            border: "1px solid rgba(55,59,148,0.2)",
+            background: "#f0f1ff",
+          }}
+        >
+          ← Retour au tableau de bord
+        </a>
+      </div>
+
+      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "16px 24px 32px" }}>
         {/* INFOS APPRENANT */}
         <div
           style={{
@@ -283,18 +287,17 @@ export default async function LearnerDetailPage({ params }: PageProps) {
               <br />
               {endDate || "En cours"}
             </div>
+            <div>
+              <span style={{ color: "#9ca3af" }}>Fin d&apos;accès</span>
+              <br />
+              <span style={{ color: accessExpired ? "#ef4444" : "#1f2937", fontWeight: accessExpired ? 600 : 400 }}>
+                {profile.access_expires_at
+                  ? new Date(profile.access_expires_at).toLocaleDateString("fr-FR")
+                  : "-"}
+                {accessExpired && <span style={{ marginLeft: 6 }}>— Expiré</span>}
+              </span>
+            </div>
           </div>
-          <div>
-  <span style={{ color: "#9ca3af" }}>Fin d'accès</span>
-  <br />
-  <span style={{ color: accessExpired ? "#ef4444" : "#22c55e", fontWeight: 600 }}>
-    {profile.access_expires_at
-      ? new Date(profile.access_expires_at).toLocaleDateString("fr-FR")
-      : "-"}
-    {accessExpired && <span style={{ marginLeft: 6 }}>Expiré</span>}
-  </span>
-</div>
-
         </div>
 
         {/* STATS */}
@@ -330,12 +333,12 @@ export default async function LearnerDetailPage({ params }: PageProps) {
           ))}
         </div>
 
-        {/* BOUTONS */}
-        {accessExpired && (
-  <div style={{ marginBottom: 16 }}>
-    <ReactivateButton learnerId={learnerId} />
-  </div>
-)}
+        {/* BOUTONS ACTIONS */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 24 }}>
+          {accessExpired && (
+            <ReactivateButton learnerId={learnerId} />
+          )}
+        </div>
 
         <LearnerPdfButtons
           learner={learnerData}
@@ -435,11 +438,9 @@ export default async function LearnerDetailPage({ params }: PageProps) {
                     <td style={{ padding: "12px 8px" }}>
                       {ch.status !== "completed" && ch.status !== "passed" && (
                         <UnlockButton
-  learnerId={learnerId}
-  chapterId={ch.id}
-/>
-
-
+                          learnerId={learnerId}
+                          chapterId={ch.id}
+                        />
                       )}
                     </td>
                   </tr>

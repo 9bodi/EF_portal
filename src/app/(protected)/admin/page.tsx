@@ -74,6 +74,26 @@ export default async function AdminPage() {
     ? Math.round(learnersWithStats.reduce((a: number, l: any) => a + l.pct, 0) / totalLearners)
     : 0;
 
+      // Durée moyenne pour terminer (apprenants 100%)
+  const completedLearners = learnersWithStats.filter((l: any) => l.pct >= 100);
+  const avgDuration = (() => {
+    if (completedLearners.length === 0) return "-";
+    const totalDays = completedLearners.reduce((acc: number, l: any) => {
+      const allAccess = (allProgress || [])
+        .filter((p: any) => p.user_id === l.id && p.last_accessed_at)
+        .map((p: any) => new Date(p.last_accessed_at).getTime());
+      const allCompleted = (allProgress || [])
+        .filter((p: any) => p.user_id === l.id && p.completed_at)
+        .map((p: any) => new Date(p.completed_at).getTime());
+      if (allAccess.length === 0 || allCompleted.length === 0) return acc;
+      const start = Math.min(...allAccess);
+      const end = Math.max(...allCompleted);
+      return acc + (end - start) / (1000 * 60 * 60 * 24);
+    }, 0);
+    const avg = Math.round(totalDays / completedLearners.length);
+    return avg <= 1 ? "< 1j" : avg + "j";
+  })();
+
   return (
     <div className="min-h-screen bg-gray-50">
 
@@ -149,7 +169,7 @@ export default async function AdminPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
           <div className="bg-white rounded-xl p-5 shadow-sm text-center">
             <p className="text-3xl font-bold text-[#373b94]">{totalLearners}</p>
             <p className="text-sm text-gray-500">Apprenants inscrits</p>
@@ -163,10 +183,15 @@ export default async function AdminPage() {
             <p className="text-sm text-gray-500">Complétion moyenne</p>
           </div>
           <div className="bg-white rounded-xl p-5 shadow-sm text-center">
+            <p className="text-3xl font-bold text-[#373b94]">{avgDuration}</p>
+            <p className="text-sm text-gray-500">Durée moy. formation</p>
+          </div>
+          <div className="bg-white rounded-xl p-5 shadow-sm text-center">
             <p className="text-3xl font-bold text-[#373b94]">{totalChapters}</p>
             <p className="text-sm text-gray-500">Chapitres</p>
           </div>
         </div>
+
 
         <div className="flex gap-3 mb-6 items-start flex-wrap">
           <CreateLearnerForm />
