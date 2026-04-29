@@ -37,6 +37,13 @@ export default function ScormPlayer({ chapterId, scormEntryUrl, savedCmiData, ch
     }
   }, [chapterId]);
 
+  /* ── Handle "Retour" : save then navigate with hard refresh ── */
+  const handleBack = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault();
+    await saveCmiData(true);
+    window.location.href = "/formation";
+  }, [saveCmiData]);
+
   useEffect(() => {
     const cmiDefaults: Record<string, string> = {
       "cmi.core.student_id": "",
@@ -82,25 +89,24 @@ export default function ScormPlayer({ chapterId, scormEntryUrl, savedCmiData, ch
 
   return (
     <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", overflow: "hidden", zIndex: 1 }}>
-      <a
-        href="/formation"
+      <button
+        onClick={handleBack}
         style={{
           position: "fixed", top: 16, left: 16, zIndex: 99999,
           backgroundColor: "rgba(15,31,61,0.85)", color: "white",
-          padding: "10px 20px", borderRadius: 10, textDecoration: "none",
-          fontSize: 15, fontWeight: 600, backdropFilter: "blur(10px)",
+          padding: "10px 20px", borderRadius: 10, border: "none",
+          fontSize: 15, fontWeight: 600, cursor: "pointer",
+          backdropFilter: "blur(10px)",
           boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
         }}
       >
         Retour au programme
-      </a>
+      </button>
       <iframe
         ref={iframeRef}
         src={scormEntryUrl}
         style={{ width: "100vw", height: "100vh", border: "none", display: "block" }}
-       allow="autoplay; fullscreen"
-
-
+        allow="autoplay; fullscreen"
         title={chapterTitle}
       />
     </div>
