@@ -255,18 +255,18 @@ export default function LearnerPdfButtons({
     });
 
     // Footer
-    const pageCount = doc.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.setTextColor(150, 150, 150);
-      doc.text(
-        `Élu Formation — Fiche apprenant — Page ${i}/${pageCount}`,
-        pageWidth / 2,
-        doc.internal.pageSize.getHeight() - 10,
-        { align: "center" }
-      );
-    }
+    const pageCount = (doc as any).getNumberOfPages();
+for (let i = 1; i <= pageCount; i++) {
+  (doc as any).setPage(i);
+  doc.setFontSize(8);
+  doc.setTextColor(150, 150, 150);
+  doc.text(
+    `Élu Formation — Fiche apprenant — Page ${i}/${pageCount}`,
+    pageWidth / 2,
+    doc.internal.pageSize.getHeight() - 10,
+    { align: "center" }
+  );
+}
 
     doc.save(`fiche-${learner.first_name}-${learner.last_name}.pdf`);
   };
