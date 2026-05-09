@@ -26,15 +26,22 @@ interface Learner {
 
 type Tab = "en_cours" | "non_demarre" | "termine";
 
+const FORMATION_DURATION_SECONDS = 3 * 3600;
+const FORMATION_PRICE = 240;
+
+function parseTimeToSeconds(timeStr: string): number {
+  if (!timeStr || timeStr === "-") return 0;
+  const hMatch = timeStr.match(/(\d+)h(\d+)/);
+  if (hMatch) return parseInt(hMatch[1]) * 3600 + parseInt(hMatch[2]) * 60;
+  const mMatch = timeStr.match(/(\d+)\s*min/);
+  if (mMatch) return parseInt(mMatch[1]) * 60;
+  return 0;
+}
+
 export default function LearnersTable({ learners }: { learners: Learner[] }) {
   const [activeTab, setActiveTab] = useState<Tab>("en_cours");
   const [filters, setFilters] = useState({
-    search: "",
-    postalCode: "",
-    groupName: "",
-    fundingType: "",
-    dateFrom: "",
-    dateTo: "",
+    search: "", postalCode: "", groupName: "", fundingType: "", dateFrom: "", dateTo: "",
   });
   const [showFilters, setShowFilters] = useState(false);
   const [logoWhite, setLogoWhite] = useState<string | null>(null);
@@ -49,10 +56,7 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
       canvas.width = img.width;
       canvas.height = img.height;
       const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.drawImage(img, 0, 0);
-        setLogoWhite(canvas.toDataURL("image/png"));
-      }
+      if (ctx) { ctx.drawImage(img, 0, 0); setLogoWhite(canvas.toDataURL("image/png")); }
     };
     img.src = "/img/LOGO_ELU-FORMATION_BLANC100.png";
   }, []);
@@ -82,9 +86,7 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
 
   const filtered = currentList.filter((l) => {
     const search = filters.search.toLowerCase();
-    if (search && !l.first_name.toLowerCase().includes(search) &&
-        !l.last_name.toLowerCase().includes(search) &&
-        !l.email.toLowerCase().includes(search)) return false;
+    if (search && !l.first_name.toLowerCase().includes(search) && !l.last_name.toLowerCase().includes(search) && !l.email.toLowerCase().includes(search)) return false;
     if (filters.postalCode && !(l.postal_code || "").startsWith(filters.postalCode)) return false;
     if (filters.groupName && (l.group_name || "").toLowerCase() !== filters.groupName.toLowerCase()) return false;
     if (filters.fundingType && l.funding_type !== filters.fundingType) return false;
@@ -104,23 +106,27 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
     return diff + "j";
   };
 
+  const getTimePct = (timeStr: string): number => {
+    const secs = parseTimeToSeconds(timeStr);
+    return Math.min(100, Math.ceil((secs / FORMATION_DURATION_SECONDS) * 100));
+  };
+
+  const getAmount = (timeStr: string): number => {
+    const secs = parseTimeToSeconds(timeStr);
+    return Math.min(FORMATION_PRICE, Math.ceil((secs / FORMATION_DURATION_SECONDS) * FORMATION_PRICE * 100) / 100);
+  };
+
   const handleDelete = async (learnerId: string) => {
     setDeletingId(learnerId);
     try {
       const res = await fetch("/api/admin/delete-learner", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ learnerId }),
       });
       const data = await res.json();
-      if (data.success) {
-        window.location.reload();
-      } else {
-        alert("Erreur : " + (data.error || "Échec de la suppression"));
-      }
-    } catch {
-      alert("Erreur réseau");
-    }
+      if (data.success) { window.location.reload(); }
+      else { alert("Erreur : " + (data.error || "Échec de la suppression")); }
+    } catch { alert("Erreur réseau"); }
     setDeletingId(null);
     setConfirmDeleteId(null);
   };
@@ -129,19 +135,13 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
     setResendingId(learnerId);
     try {
       const res = await fetch("/api/admin/resend-welcome", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ learnerId }),
       });
       const data = await res.json();
-      if (data.success) {
-        alert("Email de bienvenue renvoyé !");
-      } else {
-        alert("Erreur : " + (data.error || "Échec de l'envoi"));
-      }
-    } catch {
-      alert("Erreur réseau");
-    }
+      if (data.success) { alert("Email de bienvenue renvoyé !"); }
+      else { alert("Erreur : " + (data.error || "Échec de l'envoi")); }
+    } catch { alert("Erreur réseau"); }
     setResendingId(null);
   };
 
@@ -153,7 +153,7 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
     doc.rect(0, 0, pageW, 32, "F");
 
     if (logoWhite) {
-      doc.addImage(logoWhite, "PNG", 14, 5, 92, 20);
+      doc.addImage(logoWhite, "PNG", 14, 5, 96, 21);
     } else {
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(18);
@@ -177,50 +177,51 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
     };
     doc.text("Onglet : " + tabLabels[activeTab], 110, 22);
 
-    const startY = 40;
+    const showTimeCols = activeTab === "en_cours" || activeTab === "termine";
 
-    const tableData = filtered.map((l) => [
-      l.last_name + " " + l.first_name,
-      l.email,
-      l.postal_code || "-",
-      l.funding_type === "dif" ? "DIF" : l.funding_type === "cohort" ? "Cohorte" : "-",
-      l.group_name || "-",
-      fmtDate(l.created_at),
-      fmtDate(l.last_login_at),
-      l.completed + "/" + l.totalChapters + " (" + l.pct + "%)",
-      l.timeStr,
-      l.scoreStr,
-      daysLeft(l.access_expires_at),
-    ]);
+    const head = showTimeCols
+      ? [["Nom", "Email", "CP", "Fin.", "Groupe", "Inscription", "1ère co.", "Date factu.", "Progression", "Temps", "% temps", "Facturable", "Score", "Accès"]]
+      : [["Nom", "Email", "CP", "Fin.", "Groupe", "Inscription", "1ère co.", "Date factu.", "Accès"]];
+
+    const body = filtered.map((l) => {
+      const createdMs = new Date(l.created_at).getTime();
+      const factuDate = new Date(createdMs + 15 * 24 * 60 * 60 * 1000).toLocaleDateString("fr-FR");
+      const base = [
+        l.last_name + " " + l.first_name,
+        l.email,
+        l.postal_code || "-",
+        l.funding_type === "dif" ? "DIFE" : l.funding_type === "collectivite" || l.funding_type === "cohort" ? "Collectivité" : "-",
+        l.group_name || "-",
+        fmtDate(l.created_at),
+        fmtDate(l.last_login_at),
+        factuDate,
+      ];
+      if (showTimeCols) {
+        return [...base,
+          l.completed + "/" + l.totalChapters + " (" + l.pct + "%)",
+          l.timeStr,
+          getTimePct(l.timeStr) + "%",
+          getAmount(l.timeStr).toFixed(2) + " €",
+          l.scoreStr,
+          daysLeft(l.access_expires_at),
+        ];
+      }
+      return [...base, daysLeft(l.access_expires_at)];
+    });
 
     autoTable(doc, {
-      startY,
-      head: [["Nom", "Email", "CP", "Fin.", "Groupe", "Inscription", "1ère connexion", "Progression", "Temps", "Score", "Accès"]],
-      body: tableData,
+      startY: 40,
+      head,
+      body,
       styles: { fontSize: 7, cellPadding: 3, lineColor: [220, 220, 220], lineWidth: 0.2 },
       headStyles: { fillColor: [55, 59, 148], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 7 },
       alternateRowStyles: { fillColor: [245, 247, 250] },
-      columnStyles: {
-        0: { cellWidth: 32 },
-        1: { cellWidth: 38 },
-        5: { halign: "center" as const },
-        6: { halign: "center" as const },
-        7: { halign: "center" as const },
-        8: { halign: "center" as const },
-        9: { halign: "center" as const },
-        10: { halign: "center" as const },
-      },
       margin: { left: 14, right: 14 },
       didDrawPage: (data: any) => {
         const pageH = doc.internal.pageSize.getHeight();
         doc.setFontSize(7);
         doc.setTextColor(150, 150, 150);
-        doc.text(
-          "Élu Formation — Rapport confidentiel — Page " + data.pageNumber,
-          pageW / 2,
-          pageH - 8,
-          { align: "center" }
-        );
+        doc.text("Élu Formation — Rapport confidentiel — Page " + data.pageNumber, pageW / 2, pageH - 8, { align: "center" });
       },
     });
 
@@ -228,23 +229,33 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
   };
 
   const exportCSV = () => {
-    const headers = ["Nom", "Prénom", "Email", "CP", "Commune", "Financement", "Groupe", "Inscription", "1ère connexion", "Progression", "Temps", "Score", "Fin accès", "Dernier accès"];
-    const rows = filtered.map((l) => [
-      l.last_name,
-      l.first_name,
-      l.email,
-      l.postal_code || "",
-      l.commune || "",
-      l.funding_type === "dif" ? "DIF" : l.funding_type === "cohort" ? "Cohorte" : "",
-      l.group_name || "",
-      fmtDate(l.created_at),
-      fmtDate(l.last_login_at),
-      l.completed + "/" + l.totalChapters + " (" + l.pct + "%)",
-      l.timeStr,
-      l.scoreStr,
-      fmtDate(l.access_expires_at),
-      fmtDate(l.lastAccess),
-    ]);
+    const showTimeCols = activeTab === "en_cours" || activeTab === "termine";
+    const headers = showTimeCols
+      ? ["Nom", "Prénom", "Email", "CP", "Commune", "Financement", "Groupe", "Inscription", "1ère connexion", "Date factu.", "Progression", "Temps", "% temps", "Facturable (€)", "Score", "Fin accès", "Dernier accès"]
+      : ["Nom", "Prénom", "Email", "CP", "Commune", "Financement", "Groupe", "Inscription", "Fin accès"];
+
+    const rows = filtered.map((l) => {
+      const createdMs = new Date(l.created_at).getTime();
+      const factuDate = new Date(createdMs + 15 * 24 * 60 * 60 * 1000).toLocaleDateString("fr-FR");
+      const base = [
+        l.last_name, l.first_name, l.email, l.postal_code || "", l.commune || "",
+        l.funding_type === "dif" ? "DIFE" : l.funding_type === "collectivite" || l.funding_type === "cohort" ? "Collectivité" : "",
+        l.group_name || "", fmtDate(l.created_at), fmtDate(l.last_login_at),
+      ];
+      if (showTimeCols) {
+        return [...base, factuDate,
+          l.completed + "/" + l.totalChapters + " (" + l.pct + "%)",
+          l.timeStr,
+          getTimePct(l.timeStr) + "%",
+          getAmount(l.timeStr).toFixed(2),
+          l.scoreStr,
+          fmtDate(l.access_expires_at),
+          fmtDate(l.lastAccess),
+        ];
+      }
+      return [...base, fmtDate(l.access_expires_at)];
+    });
+
     const csv = [headers.join(";"), ...rows.map((r) => r.join(";"))].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -260,6 +271,8 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
     { key: "non_demarre", label: "Non démarrée", count: segmented.non_demarre.length },
     { key: "termine", label: "Terminée", count: segmented.termine.length },
   ];
+
+  const showTimeCols = activeTab === "en_cours" || activeTab === "termine";
 
   return (
     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -277,17 +290,11 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
             }}
           >
             {tab.label}
-            <span
-              style={{
-                marginLeft: 8,
-                background: activeTab === tab.key ? "#373b94" : "#e5e7eb",
-                color: activeTab === tab.key ? "#fff" : "#6b7280",
-                padding: "2px 8px",
-                borderRadius: 99,
-                fontSize: 11,
-                fontWeight: 700,
-              }}
-            >
+            <span style={{
+              marginLeft: 8, background: activeTab === tab.key ? "#373b94" : "#e5e7eb",
+              color: activeTab === tab.key ? "#fff" : "#6b7280",
+              padding: "2px 8px", borderRadius: 99, fontSize: 11, fontWeight: 700,
+            }}>
               {tab.count}
             </span>
           </button>
@@ -321,8 +328,8 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
           </select>
           <select value={filters.fundingType} onChange={(e) => setFilters({...filters, fundingType: e.target.value})} className="px-3 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#373b94]">
             <option value="">Tout financement</option>
-            <option value="dif">DIF</option>
-            <option value="cohort">Cohorte</option>
+            <option value="dif">DIFE</option>
+            <option value="collectivite">Collectivité</option>
           </select>
           <input type="date" value={filters.dateFrom} onChange={(e) => setFilters({...filters, dateFrom: e.target.value})} className="px-3 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#373b94]" title="Inscrit depuis" />
           <input type="date" value={filters.dateTo} onChange={(e) => setFilters({...filters, dateTo: e.target.value})} className="px-3 py-2 border rounded-lg text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#373b94]" title="Inscrit jusqu'au" />
@@ -332,42 +339,15 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
         </div>
       )}
 
-      {/* MODALE CONFIRMATION SUPPRESSION */}
+      {/* MODALE SUPPRESSION */}
       {confirmDeleteId && (
-        <div style={{
-          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-          background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center",
-          justifyContent: "center", zIndex: 9999,
-        }}>
-          <div style={{
-            background: "#fff", borderRadius: 16, padding: 32,
-            maxWidth: 420, width: "90%", textAlign: "center",
-          }}>
-            <p style={{ fontSize: 18, fontWeight: 700, color: "#1f2937", marginBottom: 8 }}>
-              Supprimer cet apprenant ?
-            </p>
-            <p style={{ fontSize: 14, color: "#6b7280", marginBottom: 24 }}>
-              Cette action est irréversible. Toutes les données (profil, progression, compte) seront supprimées.
-            </p>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
+          <div style={{ background: "#fff", borderRadius: 16, padding: 32, maxWidth: 420, width: "90%", textAlign: "center" }}>
+            <p style={{ fontSize: 18, fontWeight: 700, color: "#1f2937", marginBottom: 8 }}>Supprimer cet apprenant ?</p>
+            <p style={{ fontSize: 14, color: "#6b7280", marginBottom: 24 }}>Cette action est irréversible. Toutes les données (profil, progression, compte) seront supprimées.</p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-              <button
-                onClick={() => setConfirmDeleteId(null)}
-                style={{
-                  padding: "10px 24px", borderRadius: 8, border: "1px solid #e5e7eb",
-                  background: "#fff", color: "#6b7280", fontWeight: 600, fontSize: 14, cursor: "pointer",
-                }}
-              >
-                Annuler
-              </button>
-              <button
-                onClick={() => handleDelete(confirmDeleteId)}
-                disabled={deletingId === confirmDeleteId}
-                style={{
-                  padding: "10px 24px", borderRadius: 8, border: "none",
-                  background: "#ef4444", color: "#fff", fontWeight: 600, fontSize: 14,
-                  cursor: "pointer", opacity: deletingId === confirmDeleteId ? 0.6 : 1,
-                }}
-              >
+              <button onClick={() => setConfirmDeleteId(null)} style={{ padding: "10px 24px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", color: "#6b7280", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>Annuler</button>
+              <button onClick={() => handleDelete(confirmDeleteId)} disabled={deletingId === confirmDeleteId} style={{ padding: "10px 24px", borderRadius: 8, border: "none", background: "#ef4444", color: "#fff", fontWeight: 600, fontSize: 14, cursor: "pointer", opacity: deletingId === confirmDeleteId ? 0.6 : 1 }}>
                 {deletingId === confirmDeleteId ? "Suppression..." : "Supprimer"}
               </button>
             </div>
@@ -392,11 +372,20 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fin.</th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Inscription</th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">1ère connexion</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Factu. prévi.</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Fin accès</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Progression</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Temps</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Score</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Date factu.</th>
+                {showTimeCols && (
+                  <>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Fin accès</th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Progression</th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Temps</th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">% temps</th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Facturable</th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Score</th>
+                  </>
+                )}
+                {!showTimeCols && (
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Fin accès</th>
+                )}
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
@@ -407,6 +396,8 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
                 const factuPassed = factuDate.getTime() < now;
                 const expiresStr = daysLeft(l.access_expires_at);
                 const isExpired = expiresStr === "Expiré";
+                const timePct = getTimePct(l.timeStr);
+                const amount = getAmount(l.timeStr);
 
                 return (
                   <tr key={l.id} className="hover:bg-gray-50">
@@ -414,54 +405,60 @@ export default function LearnersTable({ learners }: { learners: Learner[] }) {
                       <a
                         href={"/admin/learner/" + l.id}
                         style={{
-                          color: "#373b94",
-                          textDecoration: "none",
-                          padding: "4px 10px",
-                          borderRadius: 6,
-                          border: "1px solid rgba(55,59,148,0.2)",
-                          display: "inline-block",
-                          transition: "all .15s",
+                          color: "#373b94", textDecoration: "none", padding: "4px 10px",
+                          borderRadius: 6, border: "1px solid rgba(55,59,148,0.2)",
+                          display: "inline-block", transition: "all .15s",
                         }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = "#373b94";
-                          e.currentTarget.style.color = "#fff";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = "transparent";
-                          e.currentTarget.style.color = "#373b94";
-                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "#373b94"; e.currentTarget.style.color = "#fff"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#373b94"; }}
                       >
                         {l.last_name} {l.first_name}
                       </a>
                     </td>
                     <td className="px-4 py-4 text-sm text-gray-500">{l.email}</td>
                     <td className="px-4 py-4 text-sm text-gray-500">{l.postal_code || "-"}</td>
-                    <td className="px-4 py-4 text-sm text-gray-500">{l.funding_type === "dif" ? "DIF" : l.funding_type === "cohort" ? "Cohorte" : "-"}</td>
+                    <td className="px-4 py-4 text-sm text-gray-500">
+                      {l.funding_type === "dif" ? "DIFE" : l.funding_type === "collectivite" || l.funding_type === "cohort" ? "Collectivité" : "-"}
+                    </td>
                     <td className="px-4 py-4 text-sm text-gray-500 text-center">{fmtDate(l.created_at)}</td>
                     <td className="px-4 py-4 text-sm text-gray-500 text-center">{fmtDate(l.last_login_at)}</td>
                     <td className="px-4 py-4 text-sm text-center">
-                      <span style={{
-                        color: factuPassed ? "#ef4444" : "#6b7280",
-                        fontWeight: factuPassed ? 600 : 400,
-                      }}>
+                      <span style={{ color: factuPassed ? "#ef4444" : "#6b7280", fontWeight: factuPassed ? 600 : 400 }}>
                         {factuDate.toLocaleDateString("fr-FR")}
                       </span>
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-500 text-center">
-                      {fmtDate(l.access_expires_at)}
-                      {!isExpired && <span style={{ color: "#9ca3af", fontSize: 11 }}> ({expiresStr})</span>}
-                      {isExpired && <span style={{ color: "#ef4444", fontWeight: 600, fontSize: 11, marginLeft: 4 }}>Expiré</span>}
-                    </td>
-                    <td className="px-4 py-4 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="w-20 bg-gray-200 rounded-full h-2">
-                          <div className="bg-[#373b94] h-2 rounded-full" style={{ width: l.pct + "%" }} />
-                        </div>
-                        <span className="text-xs text-gray-500">{l.completed}/{l.totalChapters}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-500 text-center">{l.timeStr}</td>
-                    <td className="px-4 py-4 text-sm text-gray-500 text-center">{l.scoreStr}</td>
+                    {showTimeCols && (
+                      <>
+                        <td className="px-4 py-4 text-sm text-gray-500 text-center">
+                          {fmtDate(l.access_expires_at)}
+                          {!isExpired && <span style={{ color: "#9ca3af", fontSize: 11 }}> ({expiresStr})</span>}
+                          {isExpired && <span style={{ color: "#ef4444", fontWeight: 600, fontSize: 11, marginLeft: 4 }}>Expiré</span>}
+                        </td>
+                        <td className="px-4 py-4 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="w-20 bg-gray-200 rounded-full h-2">
+                              <div className="bg-[#373b94] h-2 rounded-full" style={{ width: l.pct + "%" }} />
+                            </div>
+                            <span className="text-xs text-gray-500">{l.completed}/{l.totalChapters}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-sm text-gray-500 text-center">{l.timeStr}</td>
+                        <td className="px-4 py-4 text-sm text-center font-medium" style={{ color: "#373b94" }}>
+                          {timePct}%
+                        </td>
+                        <td className="px-4 py-4 text-sm text-center font-medium" style={{ color: "#16a34a" }}>
+                          {amount.toFixed(2)} €
+                        </td>
+                        <td className="px-4 py-4 text-sm text-gray-500 text-center">{l.scoreStr}</td>
+                      </>
+                    )}
+                    {!showTimeCols && (
+                      <td className="px-4 py-4 text-sm text-gray-500 text-center">
+                        {fmtDate(l.access_expires_at)}
+                        {!isExpired && <span style={{ color: "#9ca3af", fontSize: 11 }}> ({expiresStr})</span>}
+                        {isExpired && <span style={{ color: "#ef4444", fontWeight: 600, fontSize: 11, marginLeft: 4 }}>Expiré</span>}
+                      </td>
+                    )}
                     <td className="px-4 py-4 text-center">
                       <div className="flex items-center justify-center gap-1">
                         {activeTab === "non_demarre" && (

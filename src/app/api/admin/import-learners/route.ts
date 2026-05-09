@@ -31,14 +31,20 @@ function parseCsvLine(line: string): string[] {
   return result;
 }
 
+const VALID_MANDATS = [
+  "maire", "adjoint", "conseiller_municipal", "conseiller_departemental",
+  "conseiller_regional", "president_epci", "vice_president_epci",
+  "conseiller_communautaire", "autre"
+];
+
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Non autorise" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
   const admin = getAdminClient();
   const { data: profile } = await admin.from("users").select("role").eq("id", user.id).single();
-  if (!profile || profile.role !== "admin") return NextResponse.json({ error: "Acces refuse" }, { status: 403 });
+  if (!profile || profile.role !== "admin") return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
 
   const formData = await request.formData();
   const file = formData.get("file") as File;
@@ -46,7 +52,7 @@ export async function POST(request: NextRequest) {
 
   const text = await file.text();
   const lines = text.split(/\r?\n/).filter((l) => l.trim() !== "");
-  if (lines.length < 2) return NextResponse.json({ error: "Le fichier doit contenir un en-tete et au moins une ligne" }, { status: 400 });
+  if (lines.length < 2) return NextResponse.json({ error: "Le fichier doit contenir un en-tête et au moins une ligne" }, { status: 400 });
 
   const header = parseCsvLine(lines[0]).map((h) =>
     h.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_")
@@ -57,10 +63,13 @@ export async function POST(request: NextRequest) {
     prenom: ["prenom", "first_name", "firstname"],
     nom: ["nom", "last_name", "lastname"],
     email: ["email", "mail", "e-mail"],
-    code_postal: ["code_postal", "cp", "postal_code", "code_postal"],
-    financement: ["financement", "funding", "funding_type", "type_financement"],
     telephone: ["telephone", "tel", "phone"],
+    code_postal: ["code_postal", "cp", "postal_code"],
     commune: ["commune", "ville", "city"],
+    financement: ["financement", "funding", "funding_type", "type_financement"],
+    mandat: ["mandat", "type_mandat", "mandate"],
+    collectivite: ["collectivite", "collectivité", "rattachement", "mairie", "epci"],
+    numero_dossier_dife: ["numero_dossier_dife", "n_dossier", "dossier_dife", "num_dife"],
     groupe: ["groupe", "group", "group_name", "nom_groupe"],
   };
 
@@ -69,10 +78,11 @@ export async function POST(request: NextRequest) {
     if (idx !== -1) colMap[key] = idx;
   }
 
-  if (colMap.prenom === undefined || colMap.nom === undefined || colMap.email === undefined ||
-      colMap.code_postal === undefined || colMap.financement === undefined) {
+  const required = ["prenom", "nom", "email", "telephone", "code_postal", "commune", "financement", "mandat", "collectivite"];
+  const missing = required.filter((k) => colMap[k] === undefined);
+  if (missing.length > 0) {
     return NextResponse.json({
-      error: "Colonnes obligatoires manquantes. Attendues : prenom, nom, email, code_postal, financement. Trouvees : " + header.join(", ")
+      error: `Colonnes obligatoires manquantes : ${missing.join(", ")}. Trouvées : ${header.join(", ")}`
     }, { status: 400 });
   }
 
@@ -83,20 +93,28 @@ export async function POST(request: NextRequest) {
     const prenom = cols[colMap.prenom] || "";
     const nom = cols[colMap.nom] || "";
     const email = cols[colMap.email] || "";
+    const telephone = cols[colMap.telephone] || "";
     const cp = cols[colMap.code_postal] || "";
+    const commune = cols[colMap.commune] || "";
     const financement = (cols[colMap.financement] || "").toLowerCase();
-    const telephone = colMap.telephone !== undefined ? cols[colMap.telephone] || "" : "";
-    const commune = colMap.commune !== undefined ? cols[colMap.commune] || "" : "";
+    const mandat = (cols[colMap.mandat] || "").toLowerCase().replace(/\s+/g, "_");
+    const collectivite = cols[colMap.collectivite] || "";
+    const numeroDossierDife = colMap.numero_dossier_dife !== undefined ? cols[colMap.numero_dossier_dife] || "" : "";
     const groupe = colMap.groupe !== undefined ? cols[colMap.groupe] || "" : "";
 
-    if (!prenom || !nom || !email || !cp || !financement) {
+    if (!prenom || !nom || !email || !telephone || !cp || !commune || !financement || !mandat || !collectivite) {
       results.push({ line: i + 1, email: email || "?", success: false, error: "Champs obligatoires manquants" });
       continue;
     }
 
-    const fundingType = financement === "dif" ? "dif" : financement === "cohort" ? "cohort" : null;
+    const fundingType = financement === "dif" ? "dif" : (financement === "collectivite" || financement === "cohort") ? "collectivite" : null;
     if (!fundingType) {
-      results.push({ line: i + 1, email, success: false, error: "Financement invalide (dif ou cohort)" });
+      results.push({ line: i + 1, email, success: false, error: "Financement invalide (dif ou collectivite)" });
+      continue;
+    }
+
+    if (!VALID_MANDATS.includes(mandat)) {
+      results.push({ line: i + 1, email, success: false, error: `Mandat invalide : ${mandat}` });
       continue;
     }
 
@@ -118,14 +136,18 @@ export async function POST(request: NextRequest) {
       email,
       first_name: prenom,
       last_name: nom,
+      phone: telephone,
       postal_code: cp,
+      commune,
       funding_type: fundingType,
+      mandat,
+      collectivite,
       role: "learner",
       must_change_password: true,
       created_at: new Date().toISOString(),
+      access_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     };
-    if (telephone) insertData.phone = telephone;
-    if (commune) insertData.commune = commune;
+    if (numeroDossierDife) insertData.numero_dossier_dife = numeroDossierDife;
     if (groupe) insertData.group_name = groupe;
 
     const { error: profileError } = await admin.from("users").insert(insertData);

@@ -14,20 +14,20 @@ function getAdminClient() {
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Non autorise" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
   const { data: profile } = await supabase.from("users").select("role").eq("id", user.id).single();
-  if (!profile || profile.role !== "admin") return NextResponse.json({ error: "Acces refuse" }, { status: 403 });
+  if (!profile || profile.role !== "admin") return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
 
   const body = await request.json();
-  const { email, firstName, lastName, phone, fundingType, commune, postalCode, groupName } = body;
+  const { email, firstName, lastName, phone, fundingType, commune, postalCode, groupName, mandat, collectivite, numeroDossierDife } = body;
 
-  if (!email || !firstName || !lastName || !postalCode || !fundingType) {
-    return NextResponse.json({ error: "Email, prenom, nom, code postal et financement requis" }, { status: 400 });
+  if (!email || !firstName || !lastName || !postalCode || !fundingType || !phone || !commune || !mandat || !collectivite) {
+    return NextResponse.json({ error: "Champs obligatoires : prénom, nom, email, téléphone, code postal, commune, financement, mandat, collectivité" }, { status: 400 });
   }
 
-  if (fundingType !== "dif" && fundingType !== "cohort") {
-    return NextResponse.json({ error: "Type de financement invalide" }, { status: 400 });
+  if (fundingType !== "dif" && fundingType !== "collectivite") {
+    return NextResponse.json({ error: "Type de financement invalide (dif ou collectivite)" }, { status: 400 });
   }
 
   const admin = getAdminClient();
@@ -49,17 +49,18 @@ export async function POST(request: NextRequest) {
     email,
     first_name: firstName,
     last_name: lastName,
+    phone,
     postal_code: postalCode,
+    commune,
     funding_type: fundingType,
+    mandat,
+    collectivite,
     role: "learner",
     must_change_password: true,
     created_at: new Date().toISOString(),
     access_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-
-
   };
-  if (phone) insertData.phone = phone;
-  if (commune) insertData.commune = commune;
+  if (numeroDossierDife) insertData.numero_dossier_dife = numeroDossierDife;
   if (groupName) insertData.group_name = groupName;
 
   const { error: profileError } = await admin.from("users").insert(insertData);

@@ -6,6 +6,9 @@ import UnlockButton from "@/components/admin/UnlockButton";
 import LearnerPdfButtons from "@/components/admin/LearnerPdfButtons";
 import ReactivateButton from "@/components/admin/ReactivateButton";
 
+const FORMATION_DURATION_SECONDS = 3 * 3600;
+const FORMATION_PRICE = 240;
+
 function getAdminClient() {
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,6 +25,29 @@ function formatTime(t: string | null): string {
   const min = parseInt(m[2]);
   if (h > 0) return `${h}h${String(min).padStart(2, "0")}`;
   return `${min} min`;
+}
+
+function formatMandat(m: string | null): string {
+  if (!m) return "-";
+  const labels: Record<string, string> = {
+    maire: "Maire",
+    adjoint: "Adjoint au maire",
+    conseiller_municipal: "Conseiller municipal",
+    conseiller_departemental: "Conseiller départemental",
+    conseiller_regional: "Conseiller régional",
+    president_epci: "Président d'EPCI",
+    vice_president_epci: "Vice-président d'EPCI",
+    conseiller_communautaire: "Conseiller communautaire",
+    autre: "Autre",
+  };
+  return labels[m] || m;
+}
+
+function formatFunding(f: string | null): string {
+  if (!f) return "-";
+  if (f === "dif") return "DIFE";
+  if (f === "collectivite" || f === "cohort") return "Collectivité territoriale";
+  return f;
 }
 
 interface PageProps {
@@ -94,6 +120,9 @@ export default async function LearnerDetailPage({ params }: PageProps) {
   const totalM = Math.floor((totalSeconds % 3600) / 60);
   const totalTimeStr = totalH > 0 ? `${totalH}h${String(totalM).padStart(2, "0")}` : `${totalM} min`;
 
+  const timePct = Math.min(100, Math.ceil((totalSeconds / FORMATION_DURATION_SECONDS) * 100));
+  const amount = Math.min(FORMATION_PRICE, Math.ceil((totalSeconds / FORMATION_DURATION_SECONDS) * FORMATION_PRICE * 100) / 100);
+
   const scored = chaptersWithProgress.filter((c: any) => c.score != null);
   const avgScore = scored.length
     ? Math.round(scored.reduce((a: number, c: any) => a + c.score, 0) / scored.length)
@@ -126,6 +155,9 @@ export default async function LearnerDetailPage({ params }: PageProps) {
     postal_code: profile.postal_code || null,
     funding_type: profile.funding_type || null,
     group_name: profile.group_name || null,
+    mandat: profile.mandat || null,
+    collectivite: profile.collectivite || null,
+    numero_dossier_dife: profile.numero_dossier_dife || null,
     created_at: profile.created_at,
     start_date: startDate,
     end_date: endDate,
@@ -241,55 +273,57 @@ export default async function LearnerDetailPage({ params }: PageProps) {
             }}
           >
             <div>
-              <span style={{ color: "#9ca3af" }}>Email</span>
-              <br />
+              <span style={{ color: "#9ca3af" }}>Email</span><br />
               {profile.email}
             </div>
             <div>
-              <span style={{ color: "#9ca3af" }}>Téléphone</span>
-              <br />
+              <span style={{ color: "#9ca3af" }}>Téléphone</span><br />
               {profile.phone || "-"}
             </div>
             <div>
-              <span style={{ color: "#9ca3af" }}>Commune</span>
-              <br />
+              <span style={{ color: "#9ca3af" }}>Commune</span><br />
               {profile.commune || "-"} {profile.postal_code ? `(${profile.postal_code})` : ""}
             </div>
             <div>
-              <span style={{ color: "#9ca3af" }}>Financement</span>
-              <br />
-              {profile.funding_type || "-"}
+              <span style={{ color: "#9ca3af" }}>Mandat</span><br />
+              {formatMandat(profile.mandat)}
             </div>
             <div>
-              <span style={{ color: "#9ca3af" }}>Groupe</span>
-              <br />
+              <span style={{ color: "#9ca3af" }}>Collectivité</span><br />
+              {profile.collectivite || "-"}
+            </div>
+            <div>
+              <span style={{ color: "#9ca3af" }}>Financement</span><br />
+              {formatFunding(profile.funding_type)}
+            </div>
+            <div>
+              <span style={{ color: "#9ca3af" }}>N° dossier DIFE</span><br />
+              {profile.numero_dossier_dife || "-"}
+            </div>
+            <div>
+              <span style={{ color: "#9ca3af" }}>Groupe</span><br />
               {profile.group_name || "-"}
             </div>
             <div>
-              <span style={{ color: "#9ca3af" }}>Inscrit le</span>
-              <br />
+              <span style={{ color: "#9ca3af" }}>Inscrit le</span><br />
               {new Date(profile.created_at).toLocaleDateString("fr-FR")}
             </div>
             <div>
-              <span style={{ color: "#9ca3af" }}>Dernière connexion</span>
-              <br />
+              <span style={{ color: "#9ca3af" }}>Dernière connexion</span><br />
               {profile.last_login_at
                 ? new Date(profile.last_login_at).toLocaleDateString("fr-FR")
                 : "-"}
             </div>
             <div>
-              <span style={{ color: "#9ca3af" }}>Début formation</span>
-              <br />
+              <span style={{ color: "#9ca3af" }}>Début formation</span><br />
               {startDate || "-"}
             </div>
             <div>
-              <span style={{ color: "#9ca3af" }}>Fin formation</span>
-              <br />
+              <span style={{ color: "#9ca3af" }}>Fin formation</span><br />
               {endDate || "En cours"}
             </div>
             <div>
-              <span style={{ color: "#9ca3af" }}>Fin d&apos;accès</span>
-              <br />
+              <span style={{ color: "#9ca3af" }}>Fin d&apos;accès</span><br />
               <span style={{ color: accessExpired ? "#ef4444" : "#1f2937", fontWeight: accessExpired ? 600 : 400 }}>
                 {profile.access_expires_at
                   ? new Date(profile.access_expires_at).toLocaleDateString("fr-FR")
@@ -304,7 +338,7 @@ export default async function LearnerDetailPage({ params }: PageProps) {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
             gap: 16,
             marginBottom: 24,
           }}
@@ -313,6 +347,8 @@ export default async function LearnerDetailPage({ params }: PageProps) {
             { label: "Complétion", value: `${pct}%`, color: "#6b7aff" },
             { label: "Chapitres", value: `${completed}/${total}`, color: "#22c55e" },
             { label: "Temps total", value: totalTimeStr, color: "#f59e0b" },
+            { label: "% temps (sur 3h)", value: `${timePct}%`, color: "#373b94" },
+            { label: "Facturable", value: `${amount.toFixed(2)} €`, color: "#16a34a" },
             { label: "Score moyen", value: avgScore !== null ? `${avgScore}%` : "-", color: "#ef4444" },
           ].map((s, i) => (
             <div
@@ -348,6 +384,8 @@ export default async function LearnerDetailPage({ params }: PageProps) {
           total={total}
           totalTimeStr={totalTimeStr}
           avgScore={avgScore}
+          timePct={timePct}
+          amount={amount}
         />
 
         {/* TABLEAU CHAPITRES */}
@@ -397,50 +435,25 @@ export default async function LearnerDetailPage({ params }: PageProps) {
                 const st = statusColors[ch.status] || statusColors.not_started;
 
                 return (
-                  <tr
-                    key={ch.id}
-                    style={{ borderBottom: "1px solid #f3f4f6" }}
-                  >
+                  <tr key={ch.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
                     <td style={{ padding: "12px 8px", color: "#9ca3af" }}>{ch.order}</td>
-                    <td style={{ padding: "12px 8px", color: "#1f2937", fontWeight: 600 }}>
-                      {ch.title}
-                    </td>
+                    <td style={{ padding: "12px 8px", color: "#1f2937", fontWeight: 600 }}>{ch.title}</td>
                     <td style={{ padding: "12px 8px" }}>
-                      <span
-                        style={{
-                          background: st.bg,
-                          color: st.text,
-                          padding: "4px 10px",
-                          borderRadius: 6,
-                          fontSize: 11,
-                          fontWeight: 700,
-                        }}
-                      >
+                      <span style={{ background: st.bg, color: st.text, padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
                         {st.label}
                       </span>
                     </td>
-                    <td style={{ padding: "12px 8px", color: "#1f2937" }}>
-                      {formatTime(ch.total_time)}
-                    </td>
-                    <td style={{ padding: "12px 8px", color: "#1f2937" }}>
-                      {ch.score != null ? `${ch.score}%` : "-"}
+                    <td style={{ padding: "12px 8px", color: "#1f2937" }}>{formatTime(ch.total_time)}</td>
+                    <td style={{ padding: "12px 8px", color: "#1f2937" }}>{ch.score != null ? `${ch.score}%` : "-"}</td>
+                    <td style={{ padding: "12px 8px", color: "#9ca3af", fontSize: 12 }}>
+                      {ch.completed_at ? new Date(ch.completed_at).toLocaleDateString("fr-FR") : "-"}
                     </td>
                     <td style={{ padding: "12px 8px", color: "#9ca3af", fontSize: 12 }}>
-                      {ch.completed_at
-                        ? new Date(ch.completed_at).toLocaleDateString("fr-FR")
-                        : "-"}
-                    </td>
-                    <td style={{ padding: "12px 8px", color: "#9ca3af", fontSize: 12 }}>
-                      {ch.last_accessed_at
-                        ? new Date(ch.last_accessed_at).toLocaleDateString("fr-FR")
-                        : "-"}
+                      {ch.last_accessed_at ? new Date(ch.last_accessed_at).toLocaleDateString("fr-FR") : "-"}
                     </td>
                     <td style={{ padding: "12px 8px" }}>
                       {ch.status !== "completed" && ch.status !== "passed" && (
-                        <UnlockButton
-                          learnerId={learnerId}
-                          chapterId={ch.id}
-                        />
+                        <UnlockButton learnerId={learnerId} chapterId={ch.id} />
                       )}
                     </td>
                   </tr>

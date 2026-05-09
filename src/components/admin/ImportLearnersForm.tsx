@@ -22,7 +22,7 @@ export default function ImportLearnersForm() {
     setLoading(true);
     setError("");
     setResults(null);
-    if (!fileRef.current?.files?.[0]) { setError("Selectionnez un fichier"); setLoading(false); return; }
+    if (!fileRef.current?.files?.[0]) { setError("Sélectionnez un fichier"); setLoading(false); return; }
 
     const formData = new FormData();
     formData.append("file", fileRef.current.files[0]);
@@ -36,8 +36,8 @@ export default function ImportLearnersForm() {
   };
 
   const downloadTemplate = () => {
-    const header = "prenom,nom,email,code_postal,financement,telephone,commune,groupe";
-    const example = "Jean,Dupont,jean.dupont@mairie.fr,33000,dif,0612345678,Bordeaux,Groupe A";
+    const header = "prenom,nom,email,telephone,code_postal,commune,financement,mandat,collectivite,numero_dossier_dife,groupe";
+    const example = "Jean,Dupont,jean.dupont@mairie.fr,0612345678,33000,Bordeaux,dif,conseiller_municipal,Mairie de Bordeaux,DIFE-2026-1234,Groupe A";
     const blob = new Blob([header + "\n" + example + "\n"], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -78,11 +78,13 @@ export default function ImportLearnersForm() {
       </div>
 
       <div className="bg-gray-50 rounded-lg p-4 mb-4 text-sm text-gray-600">
-        <p className="font-medium mb-1">Format attendu (CSV, separateur virgule ou point-virgule) :</p>
-        <code className="text-xs bg-gray-200 px-2 py-1 rounded block mt-1">prenom,nom,email,code_postal,financement,telephone,commune,groupe</code>
-        <p className="mt-2 text-xs text-gray-400">Colonnes obligatoires : prenom, nom, email, code_postal, financement (dif ou cohort). Les autres sont optionnelles.</p>
+        <p className="font-medium mb-1">Format attendu (CSV, séparateur virgule ou point-virgule) :</p>
+        <code className="text-xs bg-gray-200 px-2 py-1 rounded block mt-1">prenom,nom,email,telephone,code_postal,commune,financement,mandat,collectivite,numero_dossier_dife,groupe</code>
+        <p className="mt-2 text-xs text-gray-500">Colonnes obligatoires : prenom, nom, email, telephone, code_postal, commune, financement (dif ou collectivite), mandat, collectivite</p>
+        <p className="mt-1 text-xs text-gray-400">Colonnes optionnelles : numero_dossier_dife, groupe</p>
+        <p className="mt-1 text-xs text-gray-400">Mandats valides : maire, adjoint, conseiller_municipal, conseiller_departemental, conseiller_regional, president_epci, vice_president_epci, conseiller_communautaire, autre</p>
         <button onClick={downloadTemplate} className="mt-3 text-sm text-[#373b94] font-medium underline hover:no-underline">
-          Telecharger le template CSV
+          Télécharger le template CSV
         </button>
       </div>
 
@@ -93,7 +95,7 @@ export default function ImportLearnersForm() {
           <div className="flex gap-4 mb-3">
             <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-2">
               <span className="text-green-700 font-bold text-lg">{results.created}</span>
-              <span className="text-green-600 text-sm ml-1">crees</span>
+              <span className="text-green-600 text-sm ml-1">créés</span>
             </div>
             {results.failed > 0 && (
               <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-2">
@@ -103,7 +105,7 @@ export default function ImportLearnersForm() {
             )}
           </div>
           <button onClick={downloadResults} className="text-sm text-[#373b94] underline hover:no-underline">
-            Telecharger les resultats (mots de passe inclus)
+            Télécharger les résultats (mots de passe inclus)
           </button>
           <div className="mt-3 max-h-60 overflow-y-auto">
             <table className="w-full text-xs">
@@ -134,4 +136,3 @@ export default function ImportLearnersForm() {
     </div>
   );
 }
-
