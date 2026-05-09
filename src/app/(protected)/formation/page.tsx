@@ -47,6 +47,21 @@ export default async function FormationPage() {
     ? Math.round(scored.reduce((a: number, c: any) => a + c.progress.score, 0) / scored.length)
     : null;
 
+
+  // Dates de formation
+  const allDates = chaptersWithProgress
+    .filter((c: any) => c.progress?.first_accessed_at)
+    .map((c: any) => new Date(c.progress.first_accessed_at).getTime());
+  const startDate = allDates.length > 0
+    ? new Date(Math.min(...allDates)).toLocaleDateString("fr-FR")
+    : null;
+  const endDate = completed === total && total > 0
+    ? new Date(Math.max(
+        ...chaptersWithProgress
+          .filter((c: any) => c.progress?.completed_at)
+          .map((c: any) => new Date(c.progress.completed_at).getTime())
+      )).toLocaleDateString("fr-FR")
+    : null;
   const next = chaptersWithProgress.find(
     (c: any) => !c.progress || (c.progress.status !== "completed" && c.progress.status !== "passed")
   );
@@ -423,7 +438,7 @@ export default async function FormationPage() {
             <p className="ef-hero-label">Tableau de bord</p>
             <h1 className="ef-hero-title">
               {pct === 100
-                ? "Formation terminée 🎉"
+                ? "Formation terminée"
                 : completed > 0
                 ? "Continuez sur votre lancée"
                 : "Commencez votre formation"}
@@ -482,14 +497,19 @@ export default async function FormationPage() {
         </div>
 
         {/* Certificats — apparaît uniquement si conditions remplies */}
-        <LearnerCertificates
+                <LearnerCertificates
           firstName={profile.first_name}
           lastName={profile.last_name}
+          mandat={profile.mandat || null}
+          collectivite={profile.collectivite || null}
           completed={completed}
           total={total}
           totalTimeStr={totalTimeStr}
           avgScore={avgScore}
+          startDate={startDate}
+          endDate={endDate}
         />
+
 
         <div className="ef-section-head">
           <h2 className="ef-section-title">Votre parcours</h2>

@@ -5,10 +5,33 @@ import { useState } from "react";
 interface Props {
   firstName: string;
   lastName: string;
+  mandat: string | null;
+  collectivite: string | null;
   completed: number;
   total: number;
   totalTimeStr: string;
   avgScore: number | null;
+  startDate: string | null;
+  endDate: string | null;
+}
+
+const FORMATION_TITLE = "Bien gérer son image et sa communication d'élu(e) local(e)";
+const ORGANISME = "Place de la République SAS — Élu Formation";
+
+function formatMandat(m: string | null): string {
+  if (!m) return "";
+  const labels: Record<string, string> = {
+    maire: "Maire",
+    adjoint: "Adjoint au maire",
+    conseiller_municipal: "Conseiller municipal",
+    conseiller_departemental: "Conseiller départemental",
+    conseiller_regional: "Conseiller régional",
+    president_epci: "Président d'EPCI",
+    vice_president_epci: "Vice-président d'EPCI",
+    conseiller_communautaire: "Conseiller communautaire",
+    autre: "Autre",
+  };
+  return labels[m] || m;
 }
 
 async function loadLogoBase64(): Promise<string> {
@@ -21,157 +44,172 @@ async function loadLogoBase64(): Promise<string> {
   });
 }
 
-export default function LearnerCertificates({ firstName, lastName, completed, total, totalTimeStr, avgScore }: Props) {
-  const [loadingSuccess, setLoadingSuccess] = useState(false);
-  const [loadingCompletion, setLoadingCompletion] = useState(false);
+export default function LearnerCertificates({
+  firstName,
+  lastName,
+  mandat,
+  collectivite,
+  completed,
+  total,
+  totalTimeStr,
+  avgScore,
+  startDate,
+  endDate,
+}: Props) {
+  const [loading, setLoading] = useState(false);
 
   const fullName = `${firstName} ${lastName}`;
   const allCompleted = completed === total && total > 0;
-  const canSuccess = avgScore !== null && avgScore >= 60 && allCompleted;
-  const canCompletion = allCompleted;
+console.log("LearnerCertificates debug:", { completed, total, allCompleted });
 
-  if (!canSuccess && !canCompletion) return null;
+  if (!allCompleted) return null;
 
-  async function handleCertificateSuccess() {
-    setLoadingSuccess(true);
+  async function handleDownload() {
+    setLoading(true);
     try {
-      const jsPDF = (await import("jspdf")).default;
-      const logo = await loadLogoBase64();
-      const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-      const w = 297;
-
-      doc.setDrawColor(55, 59, 148);
-      doc.setLineWidth(1.5);
-      doc.rect(10, 10, w - 20, 190);
-      doc.setLineWidth(0.5);
-      doc.rect(13, 13, w - 26, 184);
-
-      doc.addImage(logo, "PNG", (w - 80) / 2, 20, 80, 17.5);
-
-      doc.setFontSize(28);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(55, 59, 148);
-      doc.text("CERTIFICAT DE RÉUSSITE", w / 2, 62, { align: "center" });
-
-      doc.setDrawColor(55, 59, 148);
-      doc.setLineWidth(0.8);
-      doc.line(w / 2 - 40, 67, w / 2 + 40, 67);
-
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(60, 60, 60);
-      doc.text("Nous certifions que", w / 2, 82, { align: "center" });
-
-      doc.setFontSize(22);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(55, 59, 148);
-      doc.text(fullName, w / 2, 94, { align: "center" });
-
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(60, 60, 60);
-      doc.text("a validé avec succès la formation", w / 2, 108, { align: "center" });
-
-      doc.setFontSize(16);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(55, 59, 148);
-      doc.text("Élu Formation — Communication politique et publique", w / 2, 120, { align: "center" });
-
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(60, 60, 60);
-      doc.text(`avec une moyenne générale de ${avgScore}%`, w / 2, 134, { align: "center" });
-      doc.text(`Modules complétés : ${completed}/${total}  —  Temps total : ${totalTimeStr}`, w / 2, 143, { align: "center" });
-
-      doc.setFontSize(11);
-      doc.setTextColor(120, 120, 120);
-      doc.text(`Délivré le ${new Date().toLocaleDateString("fr-FR")}`, w / 2, 160, { align: "center" });
-
-      doc.setDrawColor(180, 180, 180);
-      doc.setLineWidth(0.3);
-      doc.line(w / 2 - 30, 178, w / 2 + 30, 178);
-      doc.setFontSize(9);
-      doc.setTextColor(150, 150, 150);
-      doc.text("Élu Formation", w / 2, 183, { align: "center" });
-
-      doc.save(`certificat-reussite-${firstName}-${lastName}.pdf`);
-    } catch (e) {
-      console.error(e);
-      alert("Erreur lors de la génération du certificat");
-    }
-    setLoadingSuccess(false);
-  }
-
-  async function handleCertificateCompletion() {
-    setLoadingCompletion(true);
-    try {
-      const jsPDF = (await import("jspdf")).default;
-      const logo = await loadLogoBase64();
-      const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-      const w = 297;
-
-      doc.setDrawColor(34, 197, 94);
-      doc.setLineWidth(1.5);
-      doc.rect(10, 10, w - 20, 190);
-      doc.setLineWidth(0.5);
-      doc.rect(13, 13, w - 26, 184);
-
-      doc.addImage(logo, "PNG", (w - 80) / 2, 20, 80, 17.5);
-
-      doc.setFontSize(28);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(34, 197, 94);
-      doc.text("CERTIFICAT DE COMPLÉTION", w / 2, 62, { align: "center" });
-
-      doc.setDrawColor(34, 197, 94);
-      doc.setLineWidth(0.8);
-      doc.line(w / 2 - 40, 67, w / 2 + 40, 67);
-
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(60, 60, 60);
-      doc.text("Nous certifions que", w / 2, 82, { align: "center" });
-
-      doc.setFontSize(22);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(55, 59, 148);
-      doc.text(fullName, w / 2, 94, { align: "center" });
-
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(60, 60, 60);
-      doc.text("a suivi l'intégralité de la formation", w / 2, 108, { align: "center" });
-
-      doc.setFontSize(16);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(55, 59, 148);
-      doc.text("Élu Formation — Communication politique et publique", w / 2, 120, { align: "center" });
-
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(60, 60, 60);
-      doc.text(`${total} modules complétés  —  Temps total : ${totalTimeStr}`, w / 2, 138, { align: "center" });
-      if (avgScore !== null) {
-        doc.text(`Score moyen : ${avgScore}%`, w / 2, 147, { align: "center" });
+      // Get or create attestation number
+      const res = await fetch("/api/learner/attestation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(`Erreur : ${data.error}`);
+        return;
       }
 
-      doc.setFontSize(11);
-      doc.setTextColor(120, 120, 120);
-      doc.text(`Délivré le ${new Date().toLocaleDateString("fr-FR")}`, w / 2, 164, { align: "center" });
+      const attestNum: string = data.attestation_number;
+      const attestDate: string = data.generated_at;
 
-      doc.setDrawColor(180, 180, 180);
-      doc.setLineWidth(0.3);
-      doc.line(w / 2 - 30, 178, w / 2 + 30, 178);
+      const jsPDF = (await import("jspdf")).default;
+      const logo = await loadLogoBase64();
+      const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+      const w = 297;
+      const h = 210;
+
+      // Border
+      doc.setDrawColor(55, 59, 148);
+      doc.setLineWidth(1.5);
+      doc.rect(10, 10, w - 20, h - 20);
+      doc.setLineWidth(0.5);
+      doc.rect(13, 13, w - 26, h - 26);
+
+      // Logo
+      doc.addImage(logo, "PNG", (w - 80) / 2, 20, 80, 17.5);
+
+      // Title
+      doc.setFontSize(26);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(55, 59, 148);
+      doc.text("ATTESTATION DE FIN DE FORMATION", w / 2, 58, { align: "center" });
+
+      // Attestation number
       doc.setFontSize(9);
-      doc.setTextColor(150, 150, 150);
-      doc.text("Élu Formation", w / 2, 183, { align: "center" });
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(140, 140, 140);
+      doc.text(`N° ${attestNum}`, w / 2, 65, { align: "center" });
 
-      doc.save(`certificat-completion-${firstName}-${lastName}.pdf`);
+      // Separator
+      doc.setDrawColor(55, 59, 148);
+      doc.setLineWidth(0.8);
+      doc.line(w / 2 - 40, 69, w / 2 + 40, 69);
+
+      // "Certifie que"
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(60, 60, 60);
+      doc.text("Nous certifions que", w / 2, 80, { align: "center" });
+
+      // Name
+      doc.setFontSize(22);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(55, 59, 148);
+      doc.text(fullName, w / 2, 92, { align: "center" });
+
+      // Mandat + collectivité
+      let yInfo = 100;
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(80, 80, 80);
+      const mandatLine = [
+        mandat ? formatMandat(mandat) : "",
+        collectivite || "",
+      ].filter(Boolean).join(" — ");
+      if (mandatLine) {
+        doc.text(mandatLine, w / 2, yInfo, { align: "center" });
+        yInfo += 8;
+      }
+
+      // "a suivi et achevé"
+      doc.setFontSize(12);
+      doc.setTextColor(60, 60, 60);
+      doc.text("a suivi et achevé la formation", w / 2, yInfo, { align: "center" });
+      yInfo += 10;
+
+      // Formation title
+      doc.setFontSize(15);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(55, 59, 148);
+      doc.text(`« ${FORMATION_TITLE} »`, w / 2, yInfo, { align: "center" });
+      yInfo += 8;
+
+      // Modalité
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(80, 80, 80);
+      doc.text("Modalité : 100 % en ligne (e-learning)", w / 2, yInfo, { align: "center" });
+      yInfo += 10;
+
+      // Details line
+      doc.setFontSize(11);
+      doc.setTextColor(60, 60, 60);
+      const detailParts = [
+        `Modules : ${completed}/${total}`,
+        `Durée : ${totalTimeStr}`,
+        avgScore !== null ? `Score moyen : ${avgScore}%` : null,
+      ].filter(Boolean).join("   •   ");
+      doc.text(detailParts, w / 2, yInfo, { align: "center" });
+      yInfo += 7;
+
+      // Period
+      if (startDate || endDate) {
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Période : du ${startDate || "-"} au ${endDate || "-"}`, w / 2, yInfo, { align: "center" });
+      }
+
+      // Delivered date + signature
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text(
+        `Délivrée le ${new Date(attestDate).toLocaleDateString("fr-FR")}`,
+        w / 2, 165, { align: "center" }
+      );
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(55, 59, 148);
+      doc.text("Pour Élu Formation,", w / 2, 173, { align: "center" });
+
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(120, 120, 120);
+      doc.text(ORGANISME, w / 2, 179, { align: "center" });
+
+      // Legal mention
+      doc.setFontSize(7);
+      doc.setTextColor(160, 160, 160);
+      doc.text(
+        "Attestation délivrée en application de l'article L.1221-3 du CGCT relatif au DIFE des élus locaux.",
+        w / 2, 189, { align: "center" }
+      );
+
+      doc.save(`attestation-${firstName}-${lastName}.pdf`);
     } catch (e) {
       console.error(e);
-      alert("Erreur lors de la génération du certificat");
+      alert("Erreur lors de la génération de l'attestation");
     }
-    setLoadingCompletion(false);
+    setLoading(false);
   }
 
   return (
@@ -187,55 +225,31 @@ export default function LearnerCertificates({ firstName, lastName, completed, to
     }}>
       <div style={{ flex: 1, minWidth: 200 }}>
         <p style={{ color: "#fff", fontSize: 18, fontWeight: 700, marginBottom: 4 }}>
-          Félicitations ! 🎉
+          Félicitations !
         </p>
         <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 13 }}>
-          Vos certificats sont disponibles au téléchargement.
+          Vous avez terminé la formation. Votre attestation est disponible.
         </p>
       </div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-        {canSuccess && (
-          <button
-            onClick={handleCertificateSuccess}
-            disabled={loadingSuccess}
-            style={{
-              padding: "12px 20px",
-              borderRadius: 10,
-              fontSize: 13,
-              fontWeight: 700,
-              cursor: "pointer",
-              border: "none",
-              background: "#fff",
-              color: "#373b94",
-              opacity: loadingSuccess ? 0.6 : 1,
-              transition: "transform .2s, box-shadow .2s",
-              boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
-            }}
-          >
-            {loadingSuccess ? "Génération..." : "🏆 Certificat de réussite"}
-          </button>
-        )}
-        {canCompletion && (
-          <button
-            onClick={handleCertificateCompletion}
-            disabled={loadingCompletion}
-            style={{
-              padding: "12px 20px",
-              borderRadius: 10,
-              fontSize: 13,
-              fontWeight: 700,
-              cursor: "pointer",
-              border: "2px solid rgba(255,255,255,0.3)",
-              background: "transparent",
-              color: "#fff",
-              opacity: loadingCompletion ? 0.6 : 1,
-              transition: "transform .2s, box-shadow .2s",
-            }}
-          >
-            {loadingCompletion ? "Génération..." : "✅ Certificat de complétion"}
-          </button>
-        )}
-      </div>
+      <button
+        onClick={handleDownload}
+        disabled={loading}
+        style={{
+          padding: "12px 24px",
+          borderRadius: 10,
+          fontSize: 13,
+          fontWeight: 700,
+          cursor: loading ? "wait" : "pointer",
+          border: "none",
+          background: "#fff",
+          color: "#373b94",
+          opacity: loading ? 0.6 : 1,
+          transition: "transform .2s, box-shadow .2s",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+        }}
+      >
+        {loading ? "Génération en cours..." : "Télécharger mon attestation"}
+      </button>
     </div>
   );
 }
