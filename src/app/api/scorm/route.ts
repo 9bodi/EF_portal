@@ -3,7 +3,6 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 
-
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -53,21 +52,55 @@ export async function POST(request: NextRequest) {
     if (!user) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
     const body = await request.json();
-    const { chapterId, cmiData, status, score } = body;
+    const { chapterId, cmiData, status, score, action } = body;
     if (!chapterId) return NextResponse.json({ error: "chapterId requis" }, { status: 400 });
 
-    // Lire session_time directement depuis cmiData — mis à jour à chaque commit SCORM
-    const sessionTime: string = cmiData?.["cmi.core.session_time"] || "00:00:00";
-
     const admin = getAdminClient();
+    const now = new Date().toISOString();
+
+    // ── Session logging ──
+    if (action === "init") {
+      // LMSInitialize : créer une nouvelle session
+      await admin.from("session_logs").insert({
+        user_id: user.id,
+        chapter_id: chapterId,
+        started_at: now,
+      });
+      return NextResponse.json({ success: true });
+    }
+
+    // ── Session update on commit/finish ──
+    const sessionTime: string = cmiData?.["cmi.core.session_time"] || "00:00:00";
+    const sessionSecs = timeToSeconds(sessionTime);
+
+    // Mettre à jour la dernière session ouverte (sans ended_at)
+    const { data: openSession } = await admin
+      .from("session_logs")
+      .select("id, started_at")
+      .eq("user_id", user.id)
+      .eq("chapter_id", chapterId)
+      .is("ended_at", null)
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (openSession) {
+      await admin
+        .from("session_logs")
+        .update({
+          ended_at: now,
+          duration_seconds: sessionSecs,
+        })
+        .eq("id", openSession.id);
+    }
+
+    // ── Progress update (existing logic) ──
     const { data: existing } = await admin
       .from("scorm_progress")
       .select("id, completed_at, total_time, session_count")
       .eq("user_id", user.id)
       .eq("chapter_id", chapterId)
       .maybeSingle();
-
-    const now = new Date().toISOString();
 
     let normalizedStatus = "incomplete";
     const s = (status || "").toLowerCase();
@@ -78,9 +111,6 @@ export async function POST(request: NextRequest) {
 
     const isCompleted = normalizedStatus === "completed" || normalizedStatus === "passed";
 
-    // session_time SCORM = durée depuis LMSInitialize (session courante)
-    // On prend le max entre l'existant et le nouveau pour éviter les régressions
-    const sessionSecs = timeToSeconds(sessionTime);
     const existingSecs = timeToSeconds(existing?.total_time || "00:00:00");
     const newTotalTime = secondsToTime(Math.max(existingSecs, sessionSecs));
 
@@ -125,7 +155,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`[SCORM] ✓ chapter=${chapterId} status=${normalizedStatus} total_time=${newTotalTime}`);
-        revalidatePath("/formation");
+    revalidatePath("/formation");
 
     return NextResponse.json({ success: true });
 

@@ -44,7 +44,7 @@ export default function ScormPlayer({ chapterId, scormEntryUrl, savedCmiData, ch
     window.location.href = "/formation";
   }, [saveCmiData]);
 
-  useEffect(() => {
+ useEffect(() => {
     const cmiDefaults: Record<string, string> = {
       "cmi.core.student_id": "",
       "cmi.core.student_name": "",
@@ -82,10 +82,18 @@ export default function ScormPlayer({ chapterId, scormEntryUrl, savedCmiData, ch
 
     (window as any).API = API;
 
+    // Log session start
+    fetch("/api/scorm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chapterId, action: "init" }),
+    }).catch(() => {});
+
     return () => {
       delete (window as any).API;
     };
-  }, [savedCmiData, saveCmiData]);
+  }, [savedCmiData, saveCmiData, chapterId]);
+
 
   return (
     <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", overflow: "hidden", zIndex: 1 }}>

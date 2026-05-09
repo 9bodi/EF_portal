@@ -86,6 +86,12 @@ export default async function LearnerDetailPage({ params }: PageProps) {
     .select("*")
     .eq("user_id", learnerId);
 
+  const { data: sessionLogs } = await admin
+    .from("session_logs")
+    .select("*")
+    .eq("user_id", learnerId)
+    .order("started_at", { ascending: true });
+
   const progressMap: Record<string, any> = {};
   (progressData || []).forEach((p: any) => {
     progressMap[p.chapter_id] = p;
@@ -147,6 +153,7 @@ export default async function LearnerDetailPage({ params }: PageProps) {
     : false;
 
   const learnerData = {
+    id: profile.id,
     first_name: profile.first_name,
     last_name: profile.last_name,
     email: profile.email,
@@ -164,6 +171,7 @@ export default async function LearnerDetailPage({ params }: PageProps) {
   };
 
   const chaptersData = chaptersWithProgress.map((c: any) => ({
+    id: c.id,
     order: c.order,
     title: c.title,
     status: c.status,
@@ -171,6 +179,13 @@ export default async function LearnerDetailPage({ params }: PageProps) {
     score: c.score,
     completed_at: c.completed_at,
     last_accessed_at: c.last_accessed_at,
+  }));
+
+  const sessionLogsData = (sessionLogs || []).map((s: any) => ({
+    chapter_id: s.chapter_id,
+    started_at: s.started_at,
+    ended_at: s.ended_at,
+    duration_seconds: s.duration_seconds,
   }));
 
   return (
@@ -379,6 +394,7 @@ export default async function LearnerDetailPage({ params }: PageProps) {
         <LearnerPdfButtons
           learner={learnerData}
           chapters={chaptersData}
+          sessionLogs={sessionLogsData}
           pct={pct}
           completed={completed}
           total={total}
