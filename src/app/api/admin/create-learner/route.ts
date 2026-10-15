@@ -22,8 +22,8 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
   const { email, firstName, lastName, phone, fundingType, commune, postalCode, groupName, mandat, collectivite, numeroDossierDife } = body;
 
-  if (!email || !firstName || !lastName || !postalCode || !fundingType || !phone || !commune || !mandat || !collectivite) {
-    return NextResponse.json({ error: "Champs obligatoires : prénom, nom, email, téléphone, code postal, commune, financement, mandat, collectivité" }, { status: 400 });
+  if (!email || !firstName || !lastName || !fundingType) {
+    return NextResponse.json({ error: "Champs obligatoires : prénom, nom, email, financement" }, { status: 400 });
   }
 
   if (fundingType !== "dif" && fundingType !== "collectivite") {
@@ -49,12 +49,12 @@ export async function POST(request: NextRequest) {
     email,
     first_name: firstName,
     last_name: lastName,
-    phone,
-    postal_code: postalCode,
-    commune,
+    phone: phone?.trim() || null,
+    postal_code: postalCode?.trim() || null,
+    commune: commune?.trim() || null,
     funding_type: fundingType,
-    mandat,
-    collectivite,
+    mandat: mandat?.trim() || null,
+    collectivite: collectivite?.trim() || null,
     role: "learner",
     must_change_password: true,
     created_at: new Date().toISOString(),

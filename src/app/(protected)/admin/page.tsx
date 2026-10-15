@@ -1,7 +1,8 @@
 ﻿import { createClient } from "@/lib/supabase/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
-import Image from "next/image";
+import AdminHeader from "@/components/admin/AdminHeader";
+import AdminTabs from "@/components/admin/AdminTabs";
 import CreateLearnerForm from "@/components/admin/CreateLearnerForm";
 import ImportLearnersForm from "@/components/admin/ImportLearnersForm";
 import LearnersTable from "@/components/admin/LearnersTable";
@@ -74,7 +75,7 @@ export default async function AdminPage() {
     ? Math.round(learnersWithStats.reduce((a: number, l: any) => a + l.pct, 0) / totalLearners)
     : 0;
 
-      // Durée moyenne pour terminer (apprenants 100%)
+  // Durée moyenne pour terminer (apprenants 100%)
   const completedLearners = learnersWithStats.filter((l: any) => l.pct >= 100);
   const avgDuration = (() => {
     if (completedLearners.length === 0) return "-";
@@ -96,80 +97,11 @@ export default async function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-
-      {/* Header */}
-      <header
-        style={{
-          background: "#373b94",
-          padding: "14px 24px",
-          display: "grid",
-          gridTemplateColumns: "1fr auto 1fr",
-          alignItems: "center",
-        }}
-      >
-        {/* Logo gauche */}
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <Image
-            src="/img/LOGO_ELU-FORMATION_BLANC100.png"
-            alt="Élu Formation"
-            width={160}
-            height={52}
-            style={{ objectFit: "contain" }}
-            priority
-          />
-        </div>
-
-        {/* ADMIN + prénom centré */}
-        <div style={{ textAlign: "center" }}>
-          <span
-            style={{
-              display: "inline-block",
-              background: "rgba(255,255,255,0.12)",
-              color: "#fff",
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: "0.1em",
-              padding: "3px 10px",
-              borderRadius: 99,
-              marginBottom: 4,
-            }}
-          >
-            ADMIN
-          </span>
-          <p style={{ color: "#fff", fontWeight: 600, fontSize: 14, margin: 0 }}>
-            {profile.first_name} {profile.last_name}
-          </p>
-        </div>
-
-        {/* Actions droite */}
-        <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 16 }}>
-          <a
-            href="/formation"
-            style={{ color: "#9aa5b8", fontSize: 13, textDecoration: "none" }}
-          >
-            Voir comme apprenant
-          </a>
-          <a
-              href="/api/auth/logout"
-              style={{
-                color: "#9aa5b8",
-                border: "1px solid rgba(255,255,255,0.15)",
-                borderRadius: 8,
-                padding: "7px 14px",
-                background: "transparent",
-                cursor: "pointer",
-                fontSize: 13,
-                textDecoration: "none",
-              }}
-            >
-              Déconnexion
-            </a>
-
-        </div>
-      </header>
+      <AdminHeader firstName={profile.first_name} lastName={profile.last_name} />
+      <AdminTabs />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
           <div className="bg-white rounded-xl p-5 shadow-sm text-center">
             <p className="text-3xl font-bold text-[#373b94]">{totalLearners}</p>
             <p className="text-sm text-gray-500">Apprenants inscrits</p>
@@ -192,7 +124,6 @@ export default async function AdminPage() {
           </div>
         </div>
 
-
         <div className="flex gap-3 mb-6 items-start flex-wrap">
           <CreateLearnerForm />
           <ImportLearnersForm />
@@ -203,4 +134,3 @@ export default async function AdminPage() {
     </div>
   );
 }
-

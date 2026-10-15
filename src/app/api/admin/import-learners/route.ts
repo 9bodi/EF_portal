@@ -2,6 +2,7 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { sendWelcomeEmail } from "@/lib/email";
+import { parseCsvLine, normalizeHeader } from "@/lib/csv";
 
 function getAdminClient() {
   return createSupabaseClient(
@@ -9,26 +10,6 @@ function getAdminClient() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
-}
-
-function parseCsvLine(line: string): string[] {
-  const result: string[] = [];
-  let current = "";
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (inQuotes) {
-      if (ch === '"' && line[i + 1] === '"') { current += '"'; i++; }
-      else if (ch === '"') { inQuotes = false; }
-      else { current += ch; }
-    } else {
-      if (ch === '"') { inQuotes = true; }
-      else if (ch === "," || ch === ";") { result.push(current.trim()); current = ""; }
-      else { current += ch; }
-    }
-  }
-  result.push(current.trim());
-  return result;
 }
 
 const VALID_MANDATS = [
@@ -50,13 +31,17 @@ export async function POST(request: NextRequest) {
   const file = formData.get("file") as File;
   if (!file) return NextResponse.json({ error: "Fichier requis" }, { status: 400 });
 
-  const text = await file.text();
+  if (/\.(xlsx|xls)$/i.test(file.name)) {
+    return NextResponse.json({
+      error: "Fichier Excel détecté. Dans Excel : Fichier → Enregistrer sous → CSV UTF-8, puis réimportez."
+    }, { status: 400 });
+  }
+
+  const text = (await file.text()).replace(/^\uFEFF/, "");
   const lines = text.split(/\r?\n/).filter((l) => l.trim() !== "");
   if (lines.length < 2) return NextResponse.json({ error: "Le fichier doit contenir un en-tête et au moins une ligne" }, { status: 400 });
 
-  const header = parseCsvLine(lines[0]).map((h) =>
-    h.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_")
-  );
+  const header = parseCsvLine(lines[0]).map(normalizeHeader);
 
   const colMap: Record<string, number> = {};
   const aliases: Record<string, string[]> = {
@@ -78,7 +63,7 @@ export async function POST(request: NextRequest) {
     if (idx !== -1) colMap[key] = idx;
   }
 
-  const required = ["prenom", "nom", "email", "telephone", "code_postal", "commune", "financement", "mandat", "collectivite"];
+  const required = ["prenom", "nom", "email", "financement"];
   const missing = required.filter((k) => colMap[k] === undefined);
   if (missing.length > 0) {
     return NextResponse.json({
@@ -90,20 +75,22 @@ export async function POST(request: NextRequest) {
 
   for (let i = 1; i < lines.length; i++) {
     const cols = parseCsvLine(lines[i]);
-    const prenom = cols[colMap.prenom] || "";
-    const nom = cols[colMap.nom] || "";
-    const email = cols[colMap.email] || "";
-    const telephone = cols[colMap.telephone] || "";
-    const cp = cols[colMap.code_postal] || "";
-    const commune = cols[colMap.commune] || "";
-    const financement = (cols[colMap.financement] || "").toLowerCase();
-    const mandat = (cols[colMap.mandat] || "").toLowerCase().replace(/\s+/g, "_");
-    const collectivite = cols[colMap.collectivite] || "";
-    const numeroDossierDife = colMap.numero_dossier_dife !== undefined ? cols[colMap.numero_dossier_dife] || "" : "";
-    const groupe = colMap.groupe !== undefined ? cols[colMap.groupe] || "" : "";
+    const get = (k: string) => (colMap[k] !== undefined ? (cols[colMap[k]] || "").trim() : "");
 
-    if (!prenom || !nom || !email || !telephone || !cp || !commune || !financement || !mandat || !collectivite) {
-      results.push({ line: i + 1, email: email || "?", success: false, error: "Champs obligatoires manquants" });
+    const prenom = get("prenom");
+    const nom = get("nom");
+    const email = get("email");
+    const telephone = get("telephone");
+    const cp = get("code_postal");
+    const commune = get("commune");
+    const financement = get("financement").toLowerCase();
+    const mandat = get("mandat").toLowerCase().replace(/\s+/g, "_");
+    const collectivite = get("collectivite");
+    const numeroDossierDife = get("numero_dossier_dife");
+    const groupe = get("groupe");
+
+    if (!prenom || !nom || !email || !financement) {
+      results.push({ line: i + 1, email: email || "?", success: false, error: "Champs obligatoires manquants (prénom, nom, email, financement)" });
       continue;
     }
 
@@ -113,7 +100,7 @@ export async function POST(request: NextRequest) {
       continue;
     }
 
-    if (!VALID_MANDATS.includes(mandat)) {
+    if (mandat && !VALID_MANDATS.includes(mandat)) {
       results.push({ line: i + 1, email, success: false, error: `Mandat invalide : ${mandat}` });
       continue;
     }
@@ -136,12 +123,12 @@ export async function POST(request: NextRequest) {
       email,
       first_name: prenom,
       last_name: nom,
-      phone: telephone,
-      postal_code: cp,
-      commune,
+      phone: telephone || null,
+      postal_code: cp || null,
+      commune: commune || null,
       funding_type: fundingType,
-      mandat,
-      collectivite,
+      mandat: mandat || null,
+      collectivite: collectivite || null,
       role: "learner",
       must_change_password: true,
       created_at: new Date().toISOString(),

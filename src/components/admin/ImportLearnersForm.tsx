@@ -80,8 +80,8 @@ export default function ImportLearnersForm() {
       <div className="bg-gray-50 rounded-lg p-4 mb-4 text-sm text-gray-600">
         <p className="font-medium mb-1">Format attendu (CSV, séparateur virgule ou point-virgule) :</p>
         <code className="text-xs bg-gray-200 px-2 py-1 rounded block mt-1">prenom,nom,email,telephone,code_postal,commune,financement,mandat,collectivite,numero_dossier_dife,groupe</code>
-        <p className="mt-2 text-xs text-gray-500">Colonnes obligatoires : prenom, nom, email, telephone, code_postal, commune, financement (dif ou collectivite), mandat, collectivite</p>
-        <p className="mt-1 text-xs text-gray-400">Colonnes optionnelles : numero_dossier_dife, groupe</p>
+        <p className="mt-2 text-xs text-gray-500">Colonnes obligatoires : prenom, nom, email, financement (dif ou collectivite)</p>
+<p className="mt-1 text-xs text-gray-400">Colonnes optionnelles : telephone, code_postal, commune, mandat, collectivite, numero_dossier_dife, groupe</p>
         <p className="mt-1 text-xs text-gray-400">Mandats valides : maire, adjoint, conseiller_municipal, conseiller_departemental, conseiller_regional, president_epci, vice_president_epci, conseiller_communautaire, autre</p>
         <button onClick={downloadTemplate} className="mt-3 text-sm text-[#373b94] font-medium underline hover:no-underline">
           Télécharger le template CSV

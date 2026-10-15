@@ -107,3 +107,43 @@ export async function sendPasswordResetEmail(
   console.log("[EMAIL] Reset envoyé à", to);
   return true;
 }
+export async function sendCertificateEmail(
+  to: string,
+  firstName: string,
+  intitule: string,
+  attachments: { filename: string; content: string }[]
+) {
+  const plural = attachments.length > 1;
+  const { data, error } = await resend.emails.send({
+    from: "Élu Formation <noreply@eluformation.fr>",
+    to,
+    replyTo: "contact@eluformation.fr",
+    subject: plural
+      ? "Vos certificats de réalisation — Élu Formation"
+      : "Votre certificat de réalisation — Élu Formation",
+    attachments,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        ${emailHeader()}
+        <div style="background-color:#ffffff;padding:30px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
+          <p style="font-size:16px;color:#1f2937;">Bonjour ${firstName},</p>
+          <p style="font-size:14px;color:#4b5563;line-height:1.7;">
+            Vous trouverez ci-joint ${plural ? "vos <strong>certificats de réalisation</strong>" : "votre <strong>certificat de réalisation</strong>"}
+            ${plural ? "" : `pour la formation « ${intitule} »`}, suivie avec Élu Formation.
+          </p>
+          <p style="font-size:14px;color:#4b5563;line-height:1.7;">
+            Nous vous invitons à ${plural ? "les" : "le"} conserver : ${plural ? "ils peuvent" : "il peut"} vous être demandé par votre financeur.
+          </p>
+          ${FOOTER}
+        </div>
+      </div>`,
+  });
+
+  if (error) {
+    const msg = (error.message || "").toLowerCase();
+    const quota = msg.includes("daily") || msg.includes("quota") || msg.includes("limit");
+    console.error("[EMAIL] Erreur certificat:", error);
+    return { ok: false as const, code: quota ? "QUOTA_EXCEEDED" : "ERROR", error: error.message };
+  }
+  return { ok: true as const, id: data?.id };
+}
