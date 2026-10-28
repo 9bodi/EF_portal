@@ -20,7 +20,7 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  const publicPaths = ["/login", "/forgot-password", "/reset-password", "/api/auth", "/mentions-legales", "/cgu", "/confidentialite"];
+const publicPaths = ["/login", "/forgot-password", "/reset-password", "/api/auth", "/api/leads", "/mentions-legales", "/cgu", "/confidentialite", "/inscription", "/contact"];
   const isPublic = publicPaths.some((p) => path.startsWith(p));
 
   if (isPublic || path === "/") {
